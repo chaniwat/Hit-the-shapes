@@ -14,23 +14,26 @@
     <pawn>
         <class>1</class>
         <texture>1.png</texture>
-        <score>1</score>
-        <alivetime>3.0</alivetime>
-        <size>100</size>
+        <size>
+	    <width>600</width>
+            <height>299</height>
+	</size>
     </pawn>
     <pawn>
         <class>2</class>
         <texture>2.png</texture>
-        <score>3</score>
-        <alivetime>2.5</alivetime>
-        <size>80</size>
+        <size>
+	    <width>1600</width>
+            <height>1200</height>
+	</size>
     </pawn>
     <pawn>
         <class>3</class>
         <texture>3.png</texture>
-        <score>5</score>
-        <alivetime>1.75</alivetime>
-        <size>60</size>
+        <size>
+	    <width>361</width>
+            <height>749</height>
+	</size>
     </pawn>
     <!-- Size max 100 -->
     

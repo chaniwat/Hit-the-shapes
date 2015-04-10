@@ -9,9 +9,9 @@ SpriteRender *SpriteRenderer;
 SpriteRender *ColorIDRenderer;
 TextRender *TextRenderer;
 
-static GLchar pathlist[255][64];
+static GLchar pathlist[256][128];
 static GLint themecount = 0;
-static GLchar temptheme[255][256];
+static GLchar temptheme[256][256];
 
 GLvoid de_allocatethemepreview();
 
@@ -401,20 +401,49 @@ GLvoid Game::ChangeLevel(GameLevel level)
 
         strcpy(pathlist[0], "");
         themecount = 0;
+        
+        // Open files
+        std::ifstream themelistsfile("../Theme/themes.txt");
+        // Read file's buffer contents into streams
+        std::stringstream themelistsfileStream;
+        themelistsfileStream << themelistsfile.rdbuf();
+        // close file handlers
+        themelistsfile.close();
+        // Convert stream into string
+        std::string themelistsA;
+        themelistsA = themelistsfileStream.str();
+        const GLchar *themelistB = themelistsA.c_str();
 
-        strcpy(pathlist[1], "../Theme/City/");
+        GLchar themename[128] = "";
+        for (int i = 0; i < strlen(themelistB); i++)
+        {
+            if (themelistB[i] != '\n' && themelistB[i] != '\0')
+            {
+                GLchar t[2] = "";
+                sprintf(t, "%c", themelistB[i]);
+                strcat(themename, t);
+            }
+            if (themelistB[i] == '\n' || themelistB[i] == '\0' || i == strlen(themelistB) - 1)
+            {
+                strcat(themename, "/");
 
-        GLchar pathtopreview[256] = "";
-        strcpy(pathtopreview, pathlist[1]);
-        strcat(pathtopreview, "preview.jpg");
+                strcpy(pathlist[themecount + 1], "../Theme/");
+                strcat(pathlist[themecount + 1], themename);
 
-        strcpy(temptheme[themecount], "");
-        sprintf(temptheme[themecount], "Theme%03d", themecount);
+                GLchar pathtopreview[256] = "";
+                strcpy(pathtopreview, pathlist[themecount + 1]);
+                strcat(pathtopreview, "preview.jpg");
 
-        ResourceManager::LoadTexture(pathtopreview, GL_TRUE, temptheme[themecount]);
-        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, 0), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
+                strcpy(temptheme[themecount], "");
+                sprintf(temptheme[themecount], "Theme%03d", themecount);
 
-        themecount++;
+                ResourceManager::LoadTexture(pathtopreview, GL_TRUE, temptheme[themecount]);
+                this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(300 * (themecount / 3), (255 * (themecount / 2))), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
+
+                themecount++;
+                strcpy(themename, "");
+            }
+        }
     }
     else if (level == MODE_LV)
     {

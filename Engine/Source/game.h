@@ -5,8 +5,10 @@
 #include <cstdlib>
 #include <cmath>
 
-// debug
 #include <iostream>
+#include <sstream>
+#include <fstream>
+#include <string>
 
 #define GLEW_STATIC
 #include <GL\glew.h>
