@@ -2,39 +2,41 @@
 <theme>
     <!-- Theme information -->
     <name>Mimi</name>
-    <version>0.1alpha</version>
     <author>Meranote</author>
     
     <!-- Theme Preview -->
-    <preview>preview.jpg</preview>
+    <preview>preview.png</preview>
 
-    <!-- Theme -->
-    <bg>milkyway-galaxy-bg.jpg</bg>
+    <!-- Theme Background | in folder bg/ -->
+    <bg>bg.png</bg>
 
-    <!-- Pawns list -->
+    <!-- Pawns list | in folder pawn/ -->
     <pawn>
         <class>1</class>
-        <texture>mimi1.png</texture>
-        <score>1</score>
-        <alivetime>3.0</alivetime>
-        <size>100</size>
+        <texture>1.png</texture>
+        <size>
+	        <width>512</width>
+            <height>512</height>
+	    </size>
     </pawn>
     <pawn>
         <class>2</class>
-        <texture>mimi2.png</texture>
-        <score>3</score>
-        <alivetime>2.5</alivetime>
-        <size>80</size>
+        <texture>2.png</texture>
+        <size>
+	        <width>512</width>
+            <height>512</height>
+	    </size>
     </pawn>
     <pawn>
         <class>3</class>
-        <texture>mimi3.png</texture>
-        <score>5</score>
-        <alivetime>1.75</alivetime>
-        <size>60</size>
+        <texture>3.png</texture>
+        <size>
+	        <width>458</width>
+            <height>458</height>
+	    </size>
     </pawn>
     <!-- Size max 100 -->
     
-    <!-- Power-Ups -->
-    <slow>orange_detoure.png</slow>
+    <!-- Power-Ups | in folder powerup/ -->
+    <slow>slow.png</slow>
 </theme>

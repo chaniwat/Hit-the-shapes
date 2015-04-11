@@ -12,6 +12,8 @@ TextRender *TextRenderer;
 static GLchar pathlist[256][128];
 static GLint themecount = 0;
 static GLchar temptheme[256][256];
+static GLint themepage = 1;
+static GLint thememaxpage = 1;
 
 GLvoid de_allocatethemepreview();
 
@@ -186,10 +188,21 @@ GLvoid Game::ProcessInput()
                     }
                     else if (this->Currentlevel == THEME_LV)
                     {
-                        this->ChangeLevel(MODE_LV);
-                        int i = itr.ColorID.r * 255.0f;
-                        this->LoadGameTheme(pathlist[1]);
-                        de_allocatethemepreview();
+                        if (itr.ColorID.r * 255.0f >= 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            this->ChangeLevel(MODE_LV);
+                            int i = itr.ColorID.r * 255.0f;
+                            this->LoadGameTheme(pathlist[i]);
+                            de_allocatethemepreview();
+                        }
+                        else if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            themepage--;
+                        }
+                        else if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            themepage++;
+                        }
                     }
                     else if (this->Currentlevel == MODE_LV)
                     {
@@ -250,13 +263,34 @@ GLvoid Game::ProcessInput()
 
 GLvoid Game::DrawCurrentLevel(GLfloat dt)
 {
-    if (this->Currentlevel != PLAY_LV)
+    if (this->Currentlevel == MENU_LV || this->Currentlevel == MODE_LV)
+    {
+        if (this->Currentlevel == MENU_LV) SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        else SpriteRenderer->Draw(ResourceManager::GetTexture("theme_background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+        for (UIButton &itr : this->Buttons)
+        {
+            itr.Draw(*SpriteRenderer);
+        }
+    }
+    else if (this->Currentlevel == THEME_LV)
     {
         SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         for (UIButton &itr : this->Buttons)
         {
-            itr.Draw(*SpriteRenderer);
+            if (itr.ColorID.r * 255.0f >= (9.0f * (themepage - 1)) + 1 && itr.ColorID.r * 255.0f <= (9.0f * themepage) && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
+            {
+                itr.Draw(*SpriteRenderer);
+            }
+            if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 0.0f && themepage != 1)
+            {
+                itr.Draw(*SpriteRenderer);
+            }
+            if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 0.0f && themepage != thememaxpage)
+            {
+                itr.Draw(*SpriteRenderer);
+            }
         }
     }
     else
@@ -432,18 +466,26 @@ GLvoid Game::ChangeLevel(GameLevel level)
 
                 GLchar pathtopreview[256] = "";
                 strcpy(pathtopreview, pathlist[themecount + 1]);
-                strcat(pathtopreview, "preview.jpg");
+                strcat(pathtopreview, "preview.png");
 
                 strcpy(temptheme[themecount], "");
                 sprintf(temptheme[themecount], "Theme%03d", themecount);
 
                 ResourceManager::LoadTexture(pathtopreview, GL_TRUE, temptheme[themecount]);
-                this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(300 * (themecount / 3), (255 * (themecount / 2))), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
+                this->Buttons.push_back(UIButton(glm::vec3(this->RSCID_red++ / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(300 * ((themecount % 9) % 3), (225 * (((themecount % 9) / 3) % 3))), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
 
                 themecount++;
                 strcpy(themename, "");
             }
         }
+
+        themecount--;
+        thememaxpage = ceil(themecount / 9.0f);
+
+        ResourceManager::LoadTexture("../Images/Button/prevpagetheme.png", GL_TRUE, "prevpagetheme");
+        ResourceManager::LoadTexture("../Images/Button/nextpagetheme.png", GL_TRUE, "nextpagetheme");
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 1.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, this->windowHeight - 80), glm::vec2(180, 80), ResourceManager::GetTexture("prevpagetheme")));
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 2.0f / 255.0f, 0.0f / 255.0f), glm::vec2(this->windowWidth - 180, this->windowHeight - 80), glm::vec2(180, 80), ResourceManager::GetTexture("nextpagetheme")));
     }
     else if (level == MODE_LV)
     {
@@ -488,7 +530,7 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
 
     GLchar pathtobackground[256] = "";
     strcpy(pathtobackground, PathToGameTheme);
-    strcat(pathtobackground, "bg/bg.jpg");
+    strcat(pathtobackground, "bg/bg.png");
 
     std::cout << pathtobackground << std::endl;
 

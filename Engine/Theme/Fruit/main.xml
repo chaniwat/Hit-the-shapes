@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <theme>
     <!-- Theme information -->
-    <name>City</name>
-    <author>mimi</author>
+    <name>Fruit</name>
+    <author>oak</author>
     
     <!-- Theme Preview -->
     <preview>preview.png</preview>
@@ -15,23 +15,23 @@
         <class>1</class>
         <texture>1.png</texture>
         <size>
-	        <width>512</width>
-            <height>255</height>
+	        <width>374</width>
+            <height>402</height>
 	    </size>
     </pawn>
     <pawn>
         <class>2</class>
         <texture>2.png</texture>
         <size>
-	        <width>512</width>
-            <height>369</height>
+	        <width>300</width>
+            <height>300</height>
 	    </size>
     </pawn>
     <pawn>
         <class>3</class>
         <texture>3.png</texture>
         <size>
-	        <width>247</width>
+	        <width>350</width>
             <height>512</height>
 	    </size>
     </pawn>
