@@ -22,6 +22,7 @@
     <ClCompile Include="Source\ui_button.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\dirent.h" />
     <ClInclude Include="Source\game.h" />
     <ClInclude Include="Source\game_pawn.h" />
     <ClInclude Include="Source\main.h" />
