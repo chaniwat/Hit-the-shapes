@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<theme>
+    <!-- Theme information -->
+    <name>Galaxy</name>
+    <author>nutty</author>
+    
+    <!-- Theme Preview -->
+    <preview>preview.png</preview>
+
+    <!-- Theme Background | in folder bg/ -->
+    <bg>bg.jpg</bg>
+
+    <!-- Pawns list | in folder pawn/ -->
+    <pawn>
+        <class>1</class>
+        <texture>1.png</texture>
+        <size>
+	        <width>248</width>
+            <height>248</height>
+	    </size>
+    </pawn>
+    <pawn>
+        <class>2</class>
+        <texture>2.png</texture>
+        <size>
+	        <width>198</width>
+            <height>198</height>
+	    </size>
+    </pawn>
+    <pawn>
+        <class>3</class>
+        <texture>3.png</texture>
+        <size>
+	        <width>193</width>
+            <height>193</height>
+	    </size>
+    </pawn>
+    <!-- Size max 100 -->
+    
+    <!-- Power-Ups | in folder powerup/ -->
+    <slow>slow.png</slow>
+</theme>
