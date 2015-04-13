@@ -432,52 +432,27 @@ GLvoid Game::ChangeLevel(GameLevel level)
     }
     else if (level == THEME_LV)
     {
+        this->Currentlevel = THEME_LV;
+
+        strcpy(pathlist[0], "");
+        themecount = 0;
+
+        int dflag = 0;
         DIR *dir;
         struct dirent *ent;
         if ((dir = opendir("../Theme/")) != NULL) {
             /* print all the files and directories within directory */
             while ((ent = readdir(dir)) != NULL) {
-                printf("%s\n", ent->d_name);
-            }
-            closedir(dir);
-        }
-        else {
-            /* could not open directory */
-            perror("");
-        }
-
-        this->Currentlevel = THEME_LV;
-
-        strcpy(pathlist[0], "");
-        themecount = 0;
-        
-        // Open files
-        std::ifstream themelistsfile("../Theme/themes.txt");
-        // Read file's buffer contents into streams
-        std::stringstream themelistsfileStream;
-        themelistsfileStream << themelistsfile.rdbuf();
-        // close file handlers
-        themelistsfile.close();
-        // Convert stream into string
-        std::string themelistsA;
-        themelistsA = themelistsfileStream.str();
-        const GLchar *themelistB = themelistsA.c_str();
-
-        GLchar themename[128] = "";
-        for (int i = 0; i < strlen(themelistB); i++)
-        {
-            if (themelistB[i] != '\n' && themelistB[i] != '\0')
-            {
-                GLchar t[2] = "";
-                sprintf(t, "%c", themelistB[i]);
-                strcat(themename, t);
-            }
-            if (themelistB[i] == '\n' || themelistB[i] == '\0' || i == strlen(themelistB) - 1)
-            {
-                strcat(themename, "/");
-
+                if (dflag < 2)
+                {
+                    dflag++;
+                    continue;
+                }
+                std::cout << ent->d_name << std::endl;
+                
                 strcpy(pathlist[themecount + 1], "../Theme/");
-                strcat(pathlist[themecount + 1], themename);
+                strcat(pathlist[themecount + 1], ent->d_name);
+                strcat(pathlist[themecount + 1], "/");
 
                 GLchar pathtopreview[256] = "";
                 strcpy(pathtopreview, pathlist[themecount + 1]);
@@ -490,11 +465,14 @@ GLvoid Game::ChangeLevel(GameLevel level)
                 this->Buttons.push_back(UIButton(glm::vec3(this->RSCID_red++ / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(300 * ((themecount % 9) % 3), (225 * (((themecount % 9) / 3) % 3))), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
 
                 themecount++;
-                strcpy(themename, "");
             }
+            closedir(dir);
+        }
+        else {
+            /* could not open directory */
+            perror("");
         }
 
-        themecount--;
         thememaxpage = ceil(themecount / 9.0f);
 
         ResourceManager::LoadTexture("../Images/Button/prevpagetheme.png", GL_TRUE, "prevpagetheme");
