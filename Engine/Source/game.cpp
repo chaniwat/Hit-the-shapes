@@ -16,8 +16,12 @@ static GLchar temptheme[256][256];
 static GLint themepage = 1;
 static GLint thememaxpage = 1;
 
-static GLfloat waitopeningtime = 3;
+static GLfloat waitopeningtime = 5;
 static GLfloat alpha = 1.0f;
+
+static GLfloat circle1_angle = 0.0f;
+static GLfloat circle2_angle = 0.0f;
+static GLfloat circle3_angle = 0.0f;
 
 GLvoid de_allocatethemepreview();
 
@@ -41,9 +45,16 @@ GLvoid Game::init()
     // Load textures
     // UI BG
     ResourceManager::LoadTexture("../Images/home.jpg", GL_FALSE, "openingbg");
-    ResourceManager::LoadTexture("../Images/milkyway-galaxy-bg.jpg", GL_FALSE, "background");
-    // UI Button loaded
+    ResourceManager::LoadTexture("../Images/menubg.jpg", GL_FALSE, "background");
+    // Menu Level
     ResourceManager::LoadTexture("../Images/Button/btn_play.png", GL_TRUE, "ui_btn_play");
+    ResourceManager::LoadTexture("../Images/Button/btn_quit.png", GL_TRUE, "ui_btn_quit");
+    ResourceManager::LoadTexture("../Images/Button/btn_highscore.png", GL_TRUE, "ui_btn_highscore");
+    ResourceManager::LoadTexture("../Images/illu_menu.png", GL_TRUE, "ui_illu_menu");
+    ResourceManager::LoadTexture("../Images/circle_1.png", GL_TRUE, "ui_circle_1");
+    ResourceManager::LoadTexture("../Images/circle_2.png", GL_TRUE, "ui_circle_2");
+    ResourceManager::LoadTexture("../Images/circle_3.png", GL_TRUE, "ui_circle_3");
+    // Other level
     ResourceManager::LoadTexture("../Images/Button/btn_timeatk.png", GL_TRUE, "ui_btn_timeatk");
     ResourceManager::LoadTexture("../Images/Button/btn_endless.png", GL_TRUE, "ui_btn_endless");
     // Configure shaders
@@ -70,6 +81,12 @@ GLvoid Game::Update(GLfloat dt)
         }
     }
 
+    circle1_angle += (115.0f / 360.0f) * dt;
+    if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
+    circle2_angle += (175.0f / 360.0f) * dt;
+    if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
+    circle3_angle += (236.0f / 360.0f) * dt;
+    if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
 
     if (this->Currentlevel == PLAY_LV)
     {
@@ -161,7 +178,7 @@ GLvoid Game::ProcessInput()
                 }
             }
         }
-        else if (waitopeningtime < 0)
+        else if (waitopeningtime <= 0)
         {
             // Render the color ID
             for (UIButton &itr : this->Buttons)
@@ -199,6 +216,10 @@ GLvoid Game::ProcessInput()
                         if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
                             this->ChangeLevel(THEME_LV);
+                        }
+                        else if (itr.ColorID.r * 255.0f == 2.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            glfwSetWindowShouldClose(Getwindow(), GL_TRUE);
                         }
                     }
                     else if (this->Currentlevel == THEME_LV)
@@ -280,7 +301,14 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
 {
     if (this->Currentlevel == MENU_LV || this->Currentlevel == MODE_LV)
     {
-        if (this->Currentlevel == MENU_LV) SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        if (this->Currentlevel == MENU_LV)
+        {
+            SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_illu_menu"), glm::vec2((this->windowWidth / 2) - 224, (this->windowHeight / 2) - 257), glm::vec2(500, 520), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_1"), glm::vec2((this->windowWidth / 2) - 167, (this->windowHeight / 2) - 157), glm::vec2(334, 318), circle1_angle, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_2"), glm::vec2((this->windowWidth / 2) - 212, (this->windowHeight / 2) - 197), glm::vec2(414, 394), circle2_angle, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_3"), glm::vec2((this->windowWidth / 2) - 260, (this->windowHeight / 2) - 245), glm::vec2(520, 494), circle3_angle, glm::vec3(1.0f, 1.0f, 1.0f));
+        }
         else SpriteRenderer->Draw(ResourceManager::GetTexture("theme_background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
         for (UIButton &itr : this->Buttons)
@@ -288,7 +316,7 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
             itr.Draw(*SpriteRenderer);
         }
 
-        if (waitopeningtime > 0) SpriteRenderer->Draw(ResourceManager::GetTexture("openingbg"), glm::vec2(0, -40), glm::vec2(this->windowWidth, this->windowHeight + 80), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), alpha);
+        if (waitopeningtime > 0) SpriteRenderer->Draw(ResourceManager::GetTexture("openingbg"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), alpha);
     }
     else if (this->Currentlevel == THEME_LV)
     {
@@ -444,7 +472,9 @@ GLvoid Game::ChangeLevel(GameLevel level)
     {
         this->Currentlevel = MENU_LV;
 
-        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, 0), glm::vec2(250, 88), ResourceManager::GetTexture("ui_btn_play")));
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - (267.0 / 2.0), (this->windowHeight / 2) - 124.0), glm::vec2(267, 124), ResourceManager::GetTexture("ui_btn_play")));
+        this->Buttons.push_back(UIButton(glm::vec3(2.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - 167.0, (this->windowHeight / 2)), glm::vec2(167, 158), ResourceManager::GetTexture("ui_btn_quit")));
+        this->Buttons.push_back(UIButton(glm::vec3(3.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2), (this->windowHeight / 2)), glm::vec2(208, 199), ResourceManager::GetTexture("ui_btn_highscore")));
     }
     else if (level == THEME_LV)
     {
