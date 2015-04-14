@@ -16,6 +16,9 @@ static GLchar temptheme[256][256];
 static GLint themepage = 1;
 static GLint thememaxpage = 1;
 
+static GLfloat waitopeningtime = 3;
+static GLfloat alpha = 1.0f;
+
 GLvoid de_allocatethemepreview();
 
 Game::Game(GLuint width, GLuint heigth) : windowWidth(width), windowHeight(heigth) ,Currentlevel(MENU_LV), Currenttheme(0), Score(0)
@@ -37,6 +40,7 @@ GLvoid Game::init()
     ResourceManager::LoadShader("../Shader/sprite.vert", "../Shader/colorid.frag", "colorid");
     // Load textures
     // UI BG
+    ResourceManager::LoadTexture("../Images/home.jpg", GL_FALSE, "openingbg");
     ResourceManager::LoadTexture("../Images/milkyway-galaxy-bg.jpg", GL_FALSE, "background");
     // UI Button loaded
     ResourceManager::LoadTexture("../Images/Button/btn_play.png", GL_TRUE, "ui_btn_play");
@@ -57,6 +61,16 @@ GLvoid Game::init()
 
 GLvoid Game::Update(GLfloat dt)
 {
+    if (waitopeningtime > 0)
+    {
+        waitopeningtime -= dt;
+        if (waitopeningtime < 1)
+        {
+            alpha -= dt;
+        }
+    }
+
+
     if (this->Currentlevel == PLAY_LV)
     {
         if (this->Currentmode == TIME_ATTACK) 
@@ -147,7 +161,7 @@ GLvoid Game::ProcessInput()
                 }
             }
         }
-        else
+        else if (waitopeningtime < 0)
         {
             // Render the color ID
             for (UIButton &itr : this->Buttons)
@@ -273,6 +287,8 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
         {
             itr.Draw(*SpriteRenderer);
         }
+
+        if (waitopeningtime > 0) SpriteRenderer->Draw(ResourceManager::GetTexture("openingbg"), glm::vec2(0, -40), glm::vec2(this->windowWidth, this->windowHeight + 80), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), alpha);
     }
     else if (this->Currentlevel == THEME_LV)
     {
@@ -423,7 +439,7 @@ GLvoid Game::ChangeLevel(GameLevel level)
 {
     this->Buttons.clear();
     this->ResetColorID();
-
+    
     if (level == MENU_LV)
     {
         this->Currentlevel = MENU_LV;
