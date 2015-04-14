@@ -16,7 +16,7 @@ static GLchar temptheme[256][256];
 static GLint themepage = 1;
 static GLint thememaxpage = 1;
 
-static GLfloat waitopeningtime = 5;
+static GLfloat waitopeningtime = 3;
 static GLfloat alpha = 1.0f;
 
 static GLfloat circle1_angle = 0.0f;
@@ -72,29 +72,40 @@ GLvoid Game::init()
 
 GLvoid Game::Update(GLfloat dt)
 {
-    if (waitopeningtime > 0)
+    if (this->Currentlevel != PLAY_LV)
     {
-        waitopeningtime -= dt;
-        if (waitopeningtime < 1)
+        if (waitopeningtime > 0)
         {
-            alpha -= dt;
+            waitopeningtime -= dt;
+            if (waitopeningtime < 1)
+            {
+                alpha -= dt;
+            }
         }
+
+        circle1_angle += (115.0f / 360.0f) * dt;
+        if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
+        circle2_angle += (175.0f / 360.0f) * dt;
+        if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
+        circle3_angle += (236.0f / 360.0f) * dt;
+        if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
     }
-
-    circle1_angle += (115.0f / 360.0f) * dt;
-    if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
-    circle2_angle += (175.0f / 360.0f) * dt;
-    if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
-    circle3_angle += (236.0f / 360.0f) * dt;
-    if (circle1_angle > 360.0f) circle1_angle = fmod(circle1_angle, 360.0f);
-
-    if (this->Currentlevel == PLAY_LV)
+    else 
     {
+        if (this->SlowMode && this->SlowTime > 0) this->SlowTime -= dt;
+        else
+        {
+            this->SlowMode = GL_FALSE;
+            this->SlowTime = 0;
+
+            std::cout << "Slow mode expired!" << std::endl;
+        }
         if (this->Currentmode == TIME_ATTACK) 
         {
             if (this->CurrentPlayState == PLAY && this->Time > 0)
             {
-                this->Time -= dt;
+                if (this->SlowMode) this->Time -= dt / 4;
+                else this->Time -= dt;
                 this->SpawnPawn(dt);
             }
             else if (this->Time < 0)
@@ -122,10 +133,11 @@ GLvoid Game::Update(GLfloat dt)
             for (GamePawn &itr : this->Pawn)
             {
                 if (itr.isDestroyed) continue;
-                itr.aliveTime -= dt;
+                if (this->SlowMode) itr.aliveTime -= dt / 1000;
+                else itr.aliveTime -= dt;
                 if (itr.aliveTime <= 0) 
                 {
-                    if (this->Currentmode == ENDLESS) this->Lives -= 1;
+                    if (this->Currentmode == ENDLESS) if (!itr.special) this->Lives -= 1;
                     itr.isDestroyed = GL_TRUE;
                 }
             }
@@ -168,11 +180,19 @@ GLvoid Game::ProcessInput()
                 // Check what object is cursor over and do something
                 for (GamePawn &itr : this->Pawn)
                 {
-                    if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
+                    if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && !itr.special)
                     {
                         // Destroy pawn and add score
                         std::cout << "You get: " << itr.Score << " scores for clicking." << std::endl;
                         this->Score += itr.Score;
+                        itr.isDestroyed = GL_TRUE;
+                    }
+                    else if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && itr.special)
+                    {
+                        // Destroy pawn and add score
+                        if (itr.specialtype == SLOW) this->SlowMode = GL_TRUE;
+                        std::cout << "Slow mode engage for 5 seconds!" << std::endl;
+                        this->SlowTime = 5;
                         itr.isDestroyed = GL_TRUE;
                     }
                 }
@@ -395,9 +415,17 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                 {
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.5, 3, glm::vec2(x_pos, y_pos), glm::vec2(80, 80), ResourceManager::GetTexture("theme_pawn2")));
                 }
-                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9999)
+                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9850)
                 {
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 1.75, 5, glm::vec2(x_pos, y_pos), glm::vec2(60, 60), ResourceManager::GetTexture("theme_pawn3")));
+                }
+                else if (percentofrarespawn >= 9851 && percentofrarespawn <= 9999)
+                {
+                    GLfloat typerand = (std::rand() % 2) + 1;
+                    specialpawn type = SLOW;
+                    //if (typerand == 1) type = SLOW;
+                    //else if (typerand == 2) type = MULTIPLIER;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
                 }
                 if (this->RSCID_red != 255)
                 {
@@ -438,9 +466,17 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                 {
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_pawn2")));
                 }
-                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9999)
+                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9850)
                 {
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_pawn3")));
+                }
+                else if (percentofrarespawn >= 9851 && percentofrarespawn <= 9999)
+                {
+                    GLfloat typerand = (std::rand() % 2) + 1;
+                    specialpawn type = SLOW;
+                    //if (typerand == 1) type = SLOW;
+                    //else if (typerand == 2) type = MULTIPLIER;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
                 }
                 if (this->RSCID_red != 255)
                 {
@@ -543,7 +579,7 @@ GLvoid Game::ChangeLevel(GameLevel level)
 GLvoid Game::ResetGame()
 {
     this->Score = 0;
-    this->Time = 30.0f;
+    this->Time = 0;
     this->Lives = 0;
     this->Pawn.clear();
     this->CurrentPlayState = PLAY;
@@ -585,11 +621,16 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
     strcpy(pathtopawn3, PathToGameTheme);
     strcat(pathtopawn3, "pawn/3.png");
 
+    GLchar pathtoslow[256] = "";
+    strcpy(pathtoslow, PathToGameTheme);
+    strcat(pathtoslow, "powerup/slow.png");
+
     // Theme loaded
     ResourceManager::LoadTexture(pathtobackground, GL_FALSE, "theme_background");
     ResourceManager::LoadTexture(pathtopawn1, GL_TRUE, "theme_pawn1");
     ResourceManager::LoadTexture(pathtopawn2, GL_TRUE, "theme_pawn2");
     ResourceManager::LoadTexture(pathtopawn3, GL_TRUE, "theme_pawn3");
+    ResourceManager::LoadTexture(pathtoslow, GL_TRUE, "theme_slow");
 }
 
 GLvoid de_allocatethemepreview()

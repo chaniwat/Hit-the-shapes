@@ -35,6 +35,8 @@ class Game
         GLuint Score;
         GLint Lives;
         GLfloat Time;
+        GLboolean SlowMode = GL_FALSE;
+        GLfloat SlowTime = 0.0f;
         GLfloat RSCID_red = 1.0f, RSCID_green = 0.0f, RSCID_blue = 0.0f; // RSCID - Random Spawn ColorID - Used for click on object checking
         std::vector<UIButton> Buttons;
         std::vector<GamePawn> Pawn;
