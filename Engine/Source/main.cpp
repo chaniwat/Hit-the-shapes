@@ -1,3 +1,5 @@
+//#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+
 #include "main.h"
 #include <mxml.h>
 
@@ -5,10 +7,12 @@ Game Hittheshapes(1024, 768);
 
 // Window declerations
 GLFWwindow* window;
+GLFWcursor* cursor_arrow;
+GLFWcursor* cursor_pointer;
 
 // GLFW function declerations
 GLvoid key_callback(GLFWwindow* window, GLint key, GLint scancode, GLint action, GLint mode);
-GLvoid mouse_button_callback(GLFWwindow* window, GLint button, GLint action, GLint mods);
+GLvoid mouse_callback(GLFWwindow* window, GLint button, GLint action, GLint mods);
 
 int main()
 {
@@ -25,8 +29,13 @@ int main()
     glewExperimental = GL_TRUE;
     glewInit();
 
+    cursor_arrow = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    cursor_pointer = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+
+    SetWindowCursor(ARROW);
+
     glfwSetKeyCallback(window, key_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetMouseButtonCallback(window, mouse_callback);
 
     // Configure OpenGL
     glViewport(0, 0, Hittheshapes.windowWidth, Hittheshapes.windowHeight);
@@ -97,7 +106,7 @@ GLvoid key_callback(GLFWwindow* window, GLint key, GLint scancode, GLint action,
     }
 }
 
-GLvoid mouse_button_callback(GLFWwindow* window, GLint button, GLint action, GLint mods)
+GLvoid mouse_callback(GLFWwindow* window, GLint button, GLint action, GLint mods)
 {
     if (button >= 0 && button <= 8)
     {
@@ -109,4 +118,10 @@ GLvoid mouse_button_callback(GLFWwindow* window, GLint button, GLint action, GLi
             Hittheshapes.Keysprocessed[button] = GL_FALSE;
         }
     }
+}
+
+GLvoid SetWindowCursor(Cursortype type)
+{
+    if (type == ARROW) glfwSetCursor(window, cursor_arrow);
+    else if (type == POINTER) glfwSetCursor(window, cursor_pointer);
 }

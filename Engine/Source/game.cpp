@@ -23,6 +23,8 @@ static GLfloat circle1_angle = 0.0f;
 static GLfloat circle2_angle = 0.0f;
 static GLfloat circle3_angle = 0.0f;
 
+static GLfloat forst_frame_alpha = 0.0f;
+
 GLvoid de_allocatethemepreview();
 
 Game::Game(GLuint width, GLuint heigth) : windowWidth(width), windowHeight(heigth) ,Currentlevel(MENU_LV), Currenttheme(0), Score(0)
@@ -57,6 +59,8 @@ GLvoid Game::init()
     // Other level
     ResourceManager::LoadTexture("../Images/Button/btn_timeatk.png", GL_TRUE, "ui_btn_timeatk");
     ResourceManager::LoadTexture("../Images/Button/btn_endless.png", GL_TRUE, "ui_btn_endless");
+    // Play level
+    ResourceManager::LoadTexture("../Images/frost-frame.png", GL_TRUE, "ui_forst_frame");
     // Configure shaders
     glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(this->windowWidth), static_cast<GLfloat>(this->windowHeight), 0.0f, -1.0f, 1.0f);
     ResourceManager::GetShader("sprite").Use().SetMatrix4("projection", projection);
@@ -92,19 +96,33 @@ GLvoid Game::Update(GLfloat dt)
     }
     else 
     {
-        if (this->SlowMode && this->SlowTime > 0) this->SlowTime -= dt;
-        else
+        if (this->SlowMode && this->SlowTime > 0)
+        {
+            this->SlowTime -= dt;
+            if (forst_frame_alpha < 1 && this->SlowTime > 0.5f)
+            {
+                forst_frame_alpha += dt * 2;
+                if (forst_frame_alpha > 1) forst_frame_alpha = 1.0;
+            }
+            else if (forst_frame_alpha > 0)
+            {
+                forst_frame_alpha -= dt * 2;
+                if (forst_frame_alpha < 0) forst_frame_alpha = 0.0;
+            }
+        }
+        else if (this->SlowMode && this->SlowTime <= 0)
         {
             this->SlowMode = GL_FALSE;
             this->SlowTime = 0;
 
             std::cout << "Slow mode expired!" << std::endl;
         }
+
         if (this->Currentmode == TIME_ATTACK) 
         {
             if (this->CurrentPlayState == PLAY && this->Time > 0)
             {
-                if (this->SlowMode) this->Time -= dt / 4;
+                if (this->SlowMode) this->Time -= 0;
                 else this->Time -= dt;
                 this->SpawnPawn(dt);
             }
@@ -133,7 +151,7 @@ GLvoid Game::Update(GLfloat dt)
             for (GamePawn &itr : this->Pawn)
             {
                 if (itr.isDestroyed) continue;
-                if (this->SlowMode) itr.aliveTime -= dt / 1000;
+                if (this->SlowMode) itr.aliveTime -= 0;
                 else itr.aliveTime -= dt;
                 if (itr.aliveTime <= 0) 
                 {
@@ -152,31 +170,83 @@ GLvoid Game::Render(GLfloat dt)
 
 GLvoid Game::ProcessInput()
 {
+    GLint viewport[4];
+    GLubyte pixel[3];
+    GLdouble xpos, ypos;
+
+    /*
+        Change cursor events
+    */
+    if (this->Currentlevel == PLAY_LV)
+    {
+        if (this->CurrentPlayState == PLAY)
+        {
+            // Render the color ID
+            for (GamePawn &itr : this->Pawn)
+            {
+                // Skip the pawn that already destroyed
+                if (itr.isDestroyed) continue;
+                // Render pawn color to color ID
+                itr.DrawColorID(*ColorIDRenderer);
+            }
+        }
+
+        // Read Color pixel at cursor
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        glfwGetCursorPos(Getwindow(), &xpos, &ypos);
+        glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixel);
+
+        // Check if over on any clickable, change cursor to pointer
+        for (GamePawn &itr : this->Pawn)
+        {
+            if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
+            {
+                SetWindowCursor(POINTER);
+                break;
+            }
+            else
+            {
+                SetWindowCursor(ARROW);
+            }
+        }
+    }
+    else if (waitopeningtime <= 0)
+    {
+        // Render the color ID
+        for (UIButton &itr : this->Buttons)
+        {
+            itr.DrawColorID(*ColorIDRenderer);
+        }
+
+        // Read Color pixel at cursor
+        glGetIntegerv(GL_VIEWPORT, viewport);
+        glfwGetCursorPos(Getwindow(), &xpos, &ypos);
+        glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixel);
+
+        // Check if over on any clickable, change cursor to pointer
+        for (UIButton &itr : this->Buttons)
+        {
+            if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
+            {
+                SetWindowCursor(POINTER);
+                break;
+            }
+            else
+            {
+                SetWindowCursor(ARROW);
+            }
+        }
+    }
+
     if (this->Keys[GLFW_MOUSE_BUTTON_LEFT] && !this->Keysprocessed[GLFW_MOUSE_BUTTON_LEFT])
     {
         if (this->Currentlevel == PLAY_LV)
         {
+            std::cout << "X: " << xpos << " Y: " << ypos << std::endl;
+            std::cout << "R: " << (int)pixel[0] << " G: " << (int)pixel[1] << " B: " << (int)pixel[2] << std::endl;
+
             if (this->CurrentPlayState == PLAY)
             {
-                // Render the color ID
-                for (GamePawn &itr : this->Pawn)
-                {
-                    // Skip the pawn that already destroyed
-                    if (itr.isDestroyed) continue;
-                    // Render pawn color to color ID
-                    itr.DrawColorID(*ColorIDRenderer);
-                }
-
-                // Read Color pixel at cursor
-                GLint viewport[4];
-                GLubyte pixel[3];
-                GLdouble xpos, ypos;
-                glGetIntegerv(GL_VIEWPORT, viewport);
-                glfwGetCursorPos(Getwindow(), &xpos, &ypos);
-                glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixel);
-                std::cout << "X: " << xpos << " Y: " << ypos << std::endl;
-                std::cout << "R: " << (int)pixel[0] << " G: " << (int)pixel[1] << " B: " << (int)pixel[2] << std::endl;
-
                 // Check what object is cursor over and do something
                 for (GamePawn &itr : this->Pawn)
                 {
@@ -200,19 +270,6 @@ GLvoid Game::ProcessInput()
         }
         else if (waitopeningtime <= 0)
         {
-            // Render the color ID
-            for (UIButton &itr : this->Buttons)
-            {
-                itr.DrawColorID(*ColorIDRenderer);
-            }
-
-            // Read Color pixel at cursor
-            GLint viewport[4];
-            GLubyte pixel[3];
-            GLdouble xpos, ypos;
-            glGetIntegerv(GL_VIEWPORT, viewport);
-            glfwGetCursorPos(Getwindow(), &xpos, &ypos);
-            glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixel);
             std::cout << "X: " << xpos << " Y: " << ypos << std::endl;
             std::cout << "R: " << (int)pixel[0] << " G: " << (int)pixel[1] << " B: " << (int)pixel[2] << std::endl;
 
@@ -283,6 +340,7 @@ GLvoid Game::ProcessInput()
         // Set that this key already processed
         this->Keysprocessed[GLFW_MOUSE_BUTTON_LEFT] = GL_TRUE;
     }
+
     if (this->Keys[GLFW_KEY_ESCAPE] && !this->Keysprocessed[GLFW_KEY_ESCAPE])
     {
         if (this->Currentlevel == PLAY_LV)
@@ -298,6 +356,7 @@ GLvoid Game::ProcessInput()
         }
         this->Keysprocessed[GLFW_KEY_ESCAPE] = GL_TRUE;
     }
+
     if (this->Currentlevel == PLAY_LV)
     {
         if (this->CurrentPlayState == END)
@@ -367,6 +426,8 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
             if (itr.isDestroyed) continue;
             itr.Draw(*SpriteRenderer);
         }
+
+        if (this->SlowMode) SpriteRenderer->Draw(ResourceManager::GetTexture("ui_forst_frame"), glm::vec2(-30, -30), glm::vec2(this->windowWidth+60, this->windowHeight+60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), forst_frame_alpha);
 
         static GLchar buffertext[32];
         sprintf(buffertext, "Score: %d", this->Score);
@@ -544,7 +605,7 @@ GLvoid Game::ChangeLevel(GameLevel level)
                 sprintf(temptheme[themecount], "Theme%03d", themecount);
 
                 ResourceManager::LoadTexture(pathtopreview, GL_TRUE, temptheme[themecount]);
-                this->Buttons.push_back(UIButton(glm::vec3(this->RSCID_red++ / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(300 * ((themecount % 9) % 3), (225 * (((themecount % 9) / 3) % 3))), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
+                this->Buttons.push_back(UIButton(glm::vec3(this->RSCID_red++ / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((300 * ((themecount % 9) % 3)) + 58, (225 * (((themecount % 9) / 3) % 3) + 32)), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
 
                 themecount++;
             }
