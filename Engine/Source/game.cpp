@@ -122,6 +122,49 @@ GLvoid Game::Update(GLfloat dt)
             std::cout << "Slow mode expired!" << std::endl;
         }
 
+        if (this->MultiMode && this->MultiTime > 0)
+        {
+            this->MultiTime -= dt;
+            /*if (forst_frame_alpha < 1 && this->MultiTime > 0.5f)
+            {
+                forst_frame_alpha += dt * 2;
+                if (forst_frame_alpha > 1) forst_frame_alpha = 1.0;
+            }
+            else if (forst_frame_alpha > 0)
+            {
+                forst_frame_alpha -= dt * 2;
+                if (forst_frame_alpha < 0) forst_frame_alpha = 0.0;
+            }*/
+        }
+        else if (this->MultiMode && this->MultiTime <= 0)
+        {
+            this->MultiMode = GL_FALSE;
+            this->MultiTime = 0;
+
+            std::cout << "Multiplier mode expired!" << std::endl;
+        }
+
+        if (this->DestroyMode)
+        {
+            for (GamePawn &itr : this->Pawn)
+            {
+                // Destroy pawn and add score
+                if (itr.isDestroyed) continue;
+                if (this->MultiMode)
+                {
+                    std::cout << "You get: " << itr.Score * 2 << " scores for destroy powerup." << std::endl;
+                    this->Score += itr.Score * 2;
+                }
+                else
+                {
+                    std::cout << "You get: " << itr.Score << " scores for destroy powerup." << std::endl;
+                    this->Score += itr.Score;
+                }
+                itr.isDestroyed = GL_TRUE;
+            }
+            this->DestroyMode = GL_FALSE;
+        }
+
         if (this->Currentmode == TIME_ATTACK) 
         {
             if (this->CurrentPlayState == PLAY && this->Time > 0)
@@ -143,7 +186,7 @@ GLvoid Game::Update(GLfloat dt)
                 this->Time += dt;
                 this->SpawnPawn(dt);
             }
-            else if (this->Lives < 0)
+            else if (this->Lives <= 0)
             {
                 this->Lives = 0;
                 this->CurrentPlayState = END;
@@ -269,16 +312,38 @@ GLvoid Game::ProcessInput()
                     if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && !itr.special)
                     {
                         // Destroy pawn and add score
-                        std::cout << "You get: " << itr.Score << " scores for clicking." << std::endl;
-                        this->Score += itr.Score;
+                        if (this->MultiMode)
+                        {
+                            std::cout << "You get: " << itr.Score * 2 << " scores for clicking." << std::endl;
+                            this->Score += itr.Score * 2;
+                        }
+                        else
+                        {
+                            std::cout << "You get: " << itr.Score << " scores for clicking." << std::endl;
+                            this->Score += itr.Score;
+                        }
                         itr.isDestroyed = GL_TRUE;
                     }
                     else if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && itr.special)
                     {
                         // Destroy pawn and add score
-                        if (itr.specialtype == SLOW) this->SlowMode = GL_TRUE;
-                        std::cout << "Slow mode engage for 5 seconds!" << std::endl;
-                        this->SlowTime = 5;
+                        if (itr.specialtype == SLOW) 
+                        {
+                            this->SlowMode = GL_TRUE;
+                            std::cout << "Slow mode engage for 5 seconds!" << std::endl;
+                            this->SlowTime = 5;
+                        }
+                        else if (itr.specialtype == MULTIPLIER)
+                        {
+                            this->MultiMode = GL_TRUE;
+                            std::cout << "Multiplier mode engage for 5 seconds!" << std::endl;
+                            this->MultiTime = 5;
+                        }
+                        else if (itr.specialtype == DESTROY)
+                        {
+                            this->DestroyMode = GL_TRUE;
+                            std::cout << "Destroy all." << std::endl;
+                        }
                         itr.isDestroyed = GL_TRUE;
                     }
                 }
@@ -474,6 +539,8 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
 
 GLvoid Game::SpawnPawn(GLfloat dt)
 {
+    std::srand(std::time(0));
+
     if (this->Currentmode == TIME_ATTACK)
     {
         this->PlayTimer += dt;
@@ -481,8 +548,10 @@ GLvoid Game::SpawnPawn(GLfloat dt)
         // Random spawn by time
         if (this->PlayTimer > this->NextTimeSpawn)
         {
+            
             for (GLfloat i = 0.0f; i < PlayTimer / 5; i++)
             {
+                
                 GLfloat factorsize;
                 GLfloat x_pos = std::rand() % (this->windowWidth - 100 + 1);
                 GLfloat y_pos = std::rand() % (this->windowHeight - 100 + 1);
@@ -499,18 +568,19 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     else factorsize = pawnthemesize[1][1] / 80;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.5, 3, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
                 }
-                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9850)
+                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9550)
                 {
                     if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 60;
                     else factorsize = pawnthemesize[2][1] / 60;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 1.75, 5, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
                 }
-                else if (percentofrarespawn >= 9851 && percentofrarespawn <= 9999)
+                else if (percentofrarespawn >= 9551 && percentofrarespawn <= 9999)
                 {
-                    GLfloat typerand = (std::rand() % 2) + 1;
-                    specialpawn type = SLOW;
-                    //if (typerand == 1) type = SLOW;
-                    //else if (typerand == 2) type = MULTIPLIER;
+                    GLfloat typerand = (std::rand() % 3) + 1;
+                    specialpawn type;
+                    if (typerand == 1) type = SLOW;
+                    else if (typerand == 2) type = MULTIPLIER;
+                    else if (typerand == 3) type = DESTROY;
                     if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100;
                     else factorsize = pawnthemesize[3][1] / 100;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
@@ -559,18 +629,19 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     else factorsize = pawnthemesize[1][1] / 100;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
                 }
-                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9850)
+                else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9550)
                 {
                     if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 100;
                     else factorsize = pawnthemesize[2][1] / 100;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
                 }
-                else if (percentofrarespawn >= 9851 && percentofrarespawn <= 9999)
+                else if (percentofrarespawn >= 9551 && percentofrarespawn <= 9999)
                 {
-                    GLfloat typerand = (std::rand() % 2) + 1;
-                    specialpawn type = SLOW;
-                    //if (typerand == 1) type = SLOW;
-                    //else if (typerand == 2) type = MULTIPLIER;
+                    GLfloat typerand = (std::rand() % 3) + 1;
+                    specialpawn type;
+                    if (typerand == 1) type = SLOW;
+                    else if (typerand == 2) type = MULTIPLIER;
+                    else if (typerand == 3) type = DESTROY;
                     if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100;
                     else factorsize = pawnthemesize[3][1] / 100;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));

@@ -7,7 +7,7 @@
 #include "texture.h"
 #include "spriterender.h"
 
-enum specialpawn { NONE, SLOW, MULTIPLIER };
+enum specialpawn { NONE, SLOW, MULTIPLIER, DESTROY };
 
 class GamePawn
 {
