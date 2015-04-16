@@ -6,6 +6,8 @@
 #include "dirent.h"
 //#include "sound.h"
 
+#include <mxml.h>
+
 SpriteRender *SpriteRenderer;
 SpriteRender *ColorIDRenderer;
 TextRender *TextRenderer;
@@ -24,6 +26,8 @@ static GLfloat circle2_angle = 0.0f;
 static GLfloat circle3_angle = 0.0f;
 
 static GLfloat forst_frame_alpha = 0.0f;
+
+static GLint pawnthemesize[3][2];
 
 GLvoid de_allocatethemepreview();
 
@@ -215,7 +219,19 @@ GLvoid Game::ProcessInput()
         // Render the color ID
         for (UIButton &itr : this->Buttons)
         {
-            itr.DrawColorID(*ColorIDRenderer);
+            if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f >= (9.0f * (themepage - 1)) + 1 && itr.ColorID.r * 255.0f <= (9.0f * themepage) && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
+            {
+                itr.DrawColorID(*ColorIDRenderer);
+            }
+            if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 0.0f && themepage != 1)
+            {
+                itr.DrawColorID(*ColorIDRenderer);
+            }
+            if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 0.0f && themepage != thememaxpage)
+            {
+                itr.DrawColorID(*ColorIDRenderer);
+            }
+            else if(this->Currentlevel != THEME_LV) itr.DrawColorID(*ColorIDRenderer);
         }
 
         // Read Color pixel at cursor
@@ -465,20 +481,27 @@ GLvoid Game::SpawnPawn(GLfloat dt)
         {
             for (GLfloat i = 0.0f; i < PlayTimer / 5; i++)
             {
+                GLfloat factorsize;
                 GLfloat x_pos = std::rand() % (this->windowWidth - 100 + 1);
                 GLfloat y_pos = std::rand() % (this->windowHeight - 100 + 1);
                 GLfloat percentofrarespawn = std::rand() % 10000;
                 if (percentofrarespawn >= 0 && percentofrarespawn <= 6000)
                 {
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_pawn1")));
+                    if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100;
+                    else factorsize = pawnthemesize[0][1] / 100;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1")));
                 }
                 else if (percentofrarespawn >= 6001 && percentofrarespawn <= 8500)
                 {
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.5, 3, glm::vec2(x_pos, y_pos), glm::vec2(80, 80), ResourceManager::GetTexture("theme_pawn2")));
+                    if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 80;
+                    else factorsize = pawnthemesize[1][1] / 80;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.5, 3, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
                 }
                 else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9850)
                 {
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 1.75, 5, glm::vec2(x_pos, y_pos), glm::vec2(60, 60), ResourceManager::GetTexture("theme_pawn3")));
+                    if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 60;
+                    else factorsize = pawnthemesize[2][1] / 60;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 1.75, 5, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
                 }
                 else if (percentofrarespawn >= 9851 && percentofrarespawn <= 9999)
                 {
@@ -516,20 +539,27 @@ GLvoid Game::SpawnPawn(GLfloat dt)
         {
             for (GLfloat i = 0.0f; i < PlayTimer / 10; i++)
             {
+                GLfloat factorsize;
                 GLfloat x_pos = std::rand() % (this->windowWidth - 100 + 1);
                 GLfloat y_pos = std::rand() % (this->windowHeight - 100 + 1);
                 GLfloat percentofrarespawn = std::rand() % 10000;
                 if (percentofrarespawn >= 0 && percentofrarespawn <= 6000)
                 {
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_pawn1")));
+                    if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100;
+                    else factorsize = pawnthemesize[0][1] / 100;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1")));
                 }
                 else if (percentofrarespawn >= 6001 && percentofrarespawn <= 8500)
                 {
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_pawn2")));
+                    if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 100;
+                    else factorsize = pawnthemesize[1][1] / 100;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
                 }
                 else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9850)
                 {
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_pawn3")));
+                    if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 100;
+                    else factorsize = pawnthemesize[2][1] / 100;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
                 }
                 else if (percentofrarespawn >= 9851 && percentofrarespawn <= 9999)
                 {
@@ -664,6 +694,12 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
 {
     std::cout << PathToGameTheme << std::endl;
 
+    GLchar pathtoxml[256] = "";
+    strcpy(pathtoxml, PathToGameTheme);
+    strcat(pathtoxml, "main.xml");
+
+    std::cout << pathtoxml << std::endl;
+
     GLchar pathtobackground[256] = "";
     strcpy(pathtobackground, PathToGameTheme);
     strcat(pathtobackground, "bg/bg.png");
@@ -685,6 +721,34 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
     GLchar pathtoslow[256] = "";
     strcpy(pathtoslow, PathToGameTheme);
     strcat(pathtoslow, "powerup/slow.png");
+
+    // Get XML information
+    FILE *fp;
+    mxml_node_t *tree;
+
+    fp = fopen(pathtoxml, "r");
+    tree = mxmlLoadFile(NULL, fp, MXML_TEXT_CALLBACK);
+    fclose(fp);
+
+    mxml_node_t *classnode;
+    mxml_node_t *widthnode;
+    mxml_node_t *heightnode;
+
+    int i = 0;
+
+    for (classnode = mxmlFindElement(tree, tree, "class", NULL, NULL, MXML_DESCEND); classnode != NULL; classnode = mxmlFindElement(classnode, tree, "class", NULL, NULL, MXML_DESCEND))
+    {
+        widthnode = mxmlFindElement(classnode, tree, "width", NULL, NULL, MXML_DESCEND);
+        heightnode = mxmlFindElement(classnode, tree, "height", NULL, NULL, MXML_DESCEND);
+        printf("Class: %s\n", classnode->child->value.text.string);
+        printf("Width: %s\n", widthnode->child->value.text.string);
+        printf("Height: %s\n", heightnode->child->value.text.string);
+        pawnthemesize[i][0] = atoi(widthnode->child->value.text.string);
+        pawnthemesize[i][1] = atoi(heightnode->child->value.text.string);
+        i++;
+    }
+
+    mxmlDelete(tree);
 
     // Theme loaded
     ResourceManager::LoadTexture(pathtobackground, GL_FALSE, "theme_background");
