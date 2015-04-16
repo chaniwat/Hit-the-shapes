@@ -194,12 +194,20 @@ GLvoid Game::Update(GLfloat dt)
         }
         if (this->CurrentPlayState == PLAY)
         {
-            // Reduce life time
+            // Reduce life time & if pawn is special type, shift hue
             for (GamePawn &itr : this->Pawn)
             {
                 if (itr.isDestroyed) continue;
+                
                 if (this->SlowMode) itr.aliveTime -= 0;
                 else itr.aliveTime -= dt;
+
+                if (itr.special)
+                {
+                    itr.Hue += (1440.0f / 360.0f) * dt;
+                    if (itr.Hue > 360.0f) itr.Hue = fmod(itr.Hue, 360.0f);
+                }
+
                 if (itr.aliveTime <= 0) 
                 {
                     if (this->Currentmode == ENDLESS) if (!itr.special) this->Lives -= 1;
