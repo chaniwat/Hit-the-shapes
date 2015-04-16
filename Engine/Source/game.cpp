@@ -96,6 +96,7 @@ GLvoid Game::init()
     // Load Sound
     ResourceManager::LoadWAVSound("../Sounds/bgm.wav", "BGM");
     ResourceManager::LoadWAVSound("../Sounds/hit.wav", "HIT");
+    ResourceManager::LoadWAVSound("../Sounds/select.wav", "SELECT");
 }
 
 GLvoid Game::Update(GLfloat dt)
@@ -301,6 +302,8 @@ GLvoid Game::ProcessInput()
         // Render the color ID
         for (UIButton &itr : this->Buttons)
         {
+            if (this->Currentlevel != THEME_LV) itr.DrawColorID(*ColorIDRenderer);
+
             if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f >= (9.0f * (themepage - 1)) + 1 && itr.ColorID.r * 255.0f <= (9.0f * themepage) && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
             {
                 itr.DrawColorID(*ColorIDRenderer);
@@ -321,7 +324,6 @@ GLvoid Game::ProcessInput()
             {
                 itr.DrawColorID(*ColorIDRenderer);
             }
-            else if(this->Currentlevel != THEME_LV) itr.DrawColorID(*ColorIDRenderer);
             if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 3.0f && itr.ColorID.b * 255.0f == 0.0f)
             {
                 itr.DrawColorID(*ColorIDRenderer);
@@ -414,6 +416,7 @@ GLvoid Game::ProcessInput()
                 {
                     // set isClicked to true to used to process in future
                     itr.isClicked = GL_TRUE;
+                    ResourceManager::GetWAVSound("SELECT").PlayOnce();
                 }
             }
 
@@ -426,7 +429,7 @@ GLvoid Game::ProcessInput()
                     {
                         if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
-                            this->RenderLoading("Loading Themes...", 0.60f);
+                            this->RenderLoading();
                             this->ChangeLevel(THEME_LV);
                         }
                         else if (itr.ColorID.r * 255.0f == 2.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
@@ -438,10 +441,9 @@ GLvoid Game::ProcessInput()
                     {
                         if (itr.ColorID.r * 255.0f >= 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
-                            this->RenderLoading("Loading Selected Themes...", 0.60f);
+                            this->RenderLoading();
                             this->ChangeLevel(MODE_LV);
-                            int i = itr.ColorID.r * 255.0f;
-                            this->LoadGameTheme(pathlist[i]);
+                            this->LoadGameTheme(pathlist[(int)pixel[0]]);
                             de_allocatethemepreview();
                         }
                         else if ((itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 0.0f) || (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 1.0f))
@@ -474,7 +476,7 @@ GLvoid Game::ProcessInput()
                         }
                         else if (itr.ColorID.r * 255.0f == 3.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
-                            this->RenderLoading("Loading Themes...", 0.60f);
+                            this->RenderLoading();
                             this->ResetGame();
                             this->ChangeLevel(THEME_LV);
                         }
@@ -608,6 +610,8 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
         }
 
         if (waitopeningtime > 0) SpriteRenderer->Draw(ResourceManager::GetTexture("openingbg"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), alpha);
+
+        
     }
     else if (this->Currentlevel == THEME_LV)
     {
@@ -654,25 +658,25 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
 
         static GLchar buffertext[32];
         sprintf(buffertext, "Score: %d", this->Score);
-        TextRenderer->RenderText(buffertext, 0.0f, 0.0f, 0.40f, glm::vec3(255.0f / 255.0f, 28.0f / 255.0f, 202.0f / 255.0f));
+        TextRenderer->RenderText(buffertext, 0.0f, 0.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
 
         sprintf(buffertext, "Time: %.2f", this->Time);
-        TextRenderer->RenderText(buffertext, 0.0f, 50.0f, 0.40f, glm::vec3(255.0f / 255.0f, 28.0f / 255.0f, 202.0f / 255.0f));
+        TextRenderer->RenderText(buffertext, 0.0f, 50.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
 
         if (this->Currentmode == ENDLESS)
         {
             sprintf(buffertext, "Lives: %d", this->Lives);
-            TextRenderer->RenderText(buffertext, 0.0f, 100.0f, 0.40f, glm::vec3(255.0f / 255.0f, 28.0f / 255.0f, 202.0f / 255.0f));
+            TextRenderer->RenderText(buffertext, 0.0f, 100.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
         }
 
         if (this->CurrentPlayState == PAUSE)
         {
-            TextRenderer->RenderText("GAME PAUSE!, Press ESC to continue", (this->windowWidth / 2) - 342.0f, (this->windowHeight / 2) - 30.0f, 0.40f, glm::vec3(255.0f / 255.0f, 28.0f / 255.0f, 202.0f / 255.0f));
+            TextRenderer->RenderText("GAME PAUSE!, Press ESC to continue", (this->windowWidth / 2) - 342.0f, (this->windowHeight / 2) - 30.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
         }
 
         if (this->CurrentPlayState == END)
         {
-            TextRenderer->RenderText("GAME OVER... Press any key to start new game.", (this->windowWidth / 2) - 312.0f, (this->windowHeight / 2) - 30.0f, 0.40f, glm::vec3(255.0f / 255.0f, 28.0f / 255.0f, 202.0f / 255.0f));
+            TextRenderer->RenderText("GAME OVER... Press any key to start new game.", (this->windowWidth / 2) - 312.0f, (this->windowHeight / 2) - 30.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
         }
     }
 }
@@ -878,8 +882,6 @@ GLvoid Game::ChangeLevel(GameLevel level)
     }
     else if (level == MODE_LV)
     {
-        themepage = 1;
-
         this->Currentlevel = MODE_LV;
 
         this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, this->windowHeight - 80), glm::vec2(367, 80), ResourceManager::GetTexture("ui_Mode_timeatk")));
@@ -888,6 +890,8 @@ GLvoid Game::ChangeLevel(GameLevel level)
     }
     else if (level == PLAY_LV)
     {
+        themepage = 1;
+
         this->Currentlevel = PLAY_LV;
         this->CurrentPlayState = PLAY;
     }
@@ -902,6 +906,11 @@ GLvoid Game::ResetGame()
     this->CurrentPlayState = PLAY;
     this->PlayTimer = 0.0f;
     this->NextTimeSpawn = 0.0f;
+    this->SlowMode = GL_FALSE;
+    this->SlowTime = 0.0f;
+    this->MultiMode = GL_FALSE;
+    this->MultiTime = 0.0f;
+    this->DestroyMode = GL_FALSE;
     this->ResetColorID();
     ResourceManager::DeleteTexture("theme_background");
     ResourceManager::DeleteTexture("theme_pawn1");
@@ -984,12 +993,12 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
     pawnthemesize[3][1] = ResourceManager::GetSizeTexture("theme_slow", HEIGHT);
 }
 
-GLvoid Game::RenderLoading(std::string text, GLfloat size)
+GLvoid Game::RenderLoading()
 {
     this->Buttons.clear();
     this->ResetColorID();
     SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-    TextRenderer->RenderText(text, this->windowWidth / 2, this->windowHeight / 2, size, glm::vec3(255.0f / 255.0f, 28.0f / 255.0f, 202.0f / 255.0f));
+    TextRenderer->RenderText("Loading...", (this->windowWidth / 2) - 156.0f, (this->windowHeight / 2) - 36.0f, 0.72f, glm::vec3(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f));
     glfwSwapBuffers(Getwindow());
 }
 

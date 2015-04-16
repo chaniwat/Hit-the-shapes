@@ -70,7 +70,7 @@ class Game
         // Change Level
         GLvoid ChangeLevel(GameLevel level);
         // Render loading
-        GLvoid RenderLoading(std::string text, GLfloat size);
+        GLvoid RenderLoading();
     private:
         const GLfloat TimeSpawnBase = 1.75f;
         GLfloat NextTimeSpawn = 0.0f;
