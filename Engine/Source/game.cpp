@@ -465,7 +465,7 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
     {
         if (this->Currentlevel == MENU_LV)
         {
-            SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, 180.0f);
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_illu_menu"), glm::vec2((this->windowWidth / 2) - 224, (this->windowHeight / 2) - 257), glm::vec2(500, 520), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_1"), glm::vec2((this->windowWidth / 2) - 167, (this->windowHeight / 2) - 157), glm::vec2(334, 318), circle1_angle, glm::vec3(1.0f, 1.0f, 1.0f));
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_2"), glm::vec2((this->windowWidth / 2) - 212, (this->windowHeight / 2) - 197), glm::vec2(414, 394), circle2_angle, glm::vec3(1.0f, 1.0f, 1.0f));

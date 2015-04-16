@@ -13,7 +13,7 @@ SpriteRender::~SpriteRender()
     glDeleteBuffers(1, &this->EBO);
 }
 
-GLvoid SpriteRender::Draw(Texture2D &texture, glm::vec2 position, glm::vec2 size, GLfloat rotate, glm::vec3 color, GLfloat alpha)
+GLvoid SpriteRender::Draw(Texture2D &texture, glm::vec2 position, glm::vec2 size, GLfloat rotate, glm::vec3 color, GLfloat alpha, GLfloat hue)
 {
     // Prepare transformations
     this->shader.Use();
@@ -31,6 +31,7 @@ GLvoid SpriteRender::Draw(Texture2D &texture, glm::vec2 position, glm::vec2 size
     // Render texture
     this->shader.SetVector3f("spriteColor", color);
     this->shader.SetFloat("spriteAlpha", alpha);
+    this->shader.SetFloat("hue", hue);
 
     glActiveTexture(GL_TEXTURE0);
     texture.Bind();
