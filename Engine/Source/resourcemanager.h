@@ -9,6 +9,8 @@
 #include "shader.h"
 #include "texture.h"
 
+enum sizetype { WIDTH, HEIGHT };
+
 class ResourceManager
 {
     private:
@@ -16,10 +18,12 @@ class ResourceManager
         // Storage
         static std::map<std::string, Shader> Shaders;
         static std::map<std::string, Texture2D> Textures;
+        static std::map<std::string, int> TexturesWidth;
+        static std::map<std::string, int> TexturesHeight;
         // Load and generates a shader class from file
         static Shader loadShaderFromFile(const GLchar *vShaderFile, const GLchar *vFragmentFile);
         // Load a texture from file
-        static Texture2D loadTextureFromFile(const GLchar *file, GLboolean alpha);
+        static Texture2D loadTextureFromFile(std::string name, const GLchar *file, GLboolean alpha);
     public:
         // Load (and generates) a shader program from source file.
         static Shader LoadShader(const GLchar *vShaderFile, const GLchar *vFragmentFile, std::string name);
@@ -29,6 +33,8 @@ class ResourceManager
         static Texture2D LoadTexture(const GLchar *file, GLboolean alpha, std::string name);
         // Get a stored texture.
         static Texture2D GetTexture(std::string name);
+        // Get a stored size texture.
+        static int GetSizeTexture(std::string name, sizetype type);
         // De-allocate texture.
         static GLvoid DeleteTexture(std::string name);
         // De-allocates all load resources.

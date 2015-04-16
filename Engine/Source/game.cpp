@@ -27,7 +27,7 @@ static GLfloat circle3_angle = 0.0f;
 
 static GLfloat forst_frame_alpha = 0.0f;
 
-static GLint pawnthemesize[3][2];
+static GLint pawnthemesize[4][2];
 
 GLvoid de_allocatethemepreview();
 
@@ -509,7 +509,9 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     specialpawn type = SLOW;
                     //if (typerand == 1) type = SLOW;
                     //else if (typerand == 2) type = MULTIPLIER;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
+                    if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100;
+                    else factorsize = pawnthemesize[3][1] / 100;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
                 }
                 if (this->RSCID_red != 255)
                 {
@@ -567,7 +569,9 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     specialpawn type = SLOW;
                     //if (typerand == 1) type = SLOW;
                     //else if (typerand == 2) type = MULTIPLIER;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(100, 100), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
+                    if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100;
+                    else factorsize = pawnthemesize[3][1] / 100;
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
                 }
                 if (this->RSCID_red != 255)
                 {
@@ -734,7 +738,7 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
     mxml_node_t *widthnode;
     mxml_node_t *heightnode;
 
-    int i = 0;
+    //int i = 0;
 
     for (classnode = mxmlFindElement(tree, tree, "class", NULL, NULL, MXML_DESCEND); classnode != NULL; classnode = mxmlFindElement(classnode, tree, "class", NULL, NULL, MXML_DESCEND))
     {
@@ -743,9 +747,9 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
         printf("Class: %s\n", classnode->child->value.text.string);
         printf("Width: %s\n", widthnode->child->value.text.string);
         printf("Height: %s\n", heightnode->child->value.text.string);
-        pawnthemesize[i][0] = atoi(widthnode->child->value.text.string);
-        pawnthemesize[i][1] = atoi(heightnode->child->value.text.string);
-        i++;
+        //pawnthemesize[i][0] = atoi(widthnode->child->value.text.string);
+        //pawnthemesize[i][1] = atoi(heightnode->child->value.text.string);
+        //i++;
     }
 
     mxmlDelete(tree);
@@ -753,9 +757,17 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
     // Theme loaded
     ResourceManager::LoadTexture(pathtobackground, GL_FALSE, "theme_background");
     ResourceManager::LoadTexture(pathtopawn1, GL_TRUE, "theme_pawn1");
+    pawnthemesize[0][0] = ResourceManager::GetSizeTexture("theme_pawn1", WIDTH);
+    pawnthemesize[0][1] = ResourceManager::GetSizeTexture("theme_pawn1", HEIGHT);
     ResourceManager::LoadTexture(pathtopawn2, GL_TRUE, "theme_pawn2");
+    pawnthemesize[1][0] = ResourceManager::GetSizeTexture("theme_pawn2", WIDTH);
+    pawnthemesize[1][1] = ResourceManager::GetSizeTexture("theme_pawn2", HEIGHT);
     ResourceManager::LoadTexture(pathtopawn3, GL_TRUE, "theme_pawn3");
+    pawnthemesize[2][0] = ResourceManager::GetSizeTexture("theme_pawn3", WIDTH);
+    pawnthemesize[2][1] = ResourceManager::GetSizeTexture("theme_pawn3", HEIGHT);
     ResourceManager::LoadTexture(pathtoslow, GL_TRUE, "theme_slow");
+    pawnthemesize[3][0] = ResourceManager::GetSizeTexture("theme_slow", WIDTH);
+    pawnthemesize[3][1] = ResourceManager::GetSizeTexture("theme_slow", HEIGHT);
 }
 
 GLvoid de_allocatethemepreview()

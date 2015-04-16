@@ -8,6 +8,8 @@
 
 std::map<std::string, Shader> ResourceManager::Shaders;
 std::map<std::string, Texture2D> ResourceManager::Textures;
+std::map<std::string, int> ResourceManager::TexturesWidth;
+std::map<std::string, int> ResourceManager::TexturesHeight;
 
 Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *vFragmentFile, std::string name)
 {
@@ -17,7 +19,7 @@ Shader ResourceManager::LoadShader(const GLchar *vShaderFile, const GLchar *vFra
 
 Texture2D ResourceManager::LoadTexture(const GLchar *file, GLboolean alpha, std::string name)
 {
-    Textures[name] = loadTextureFromFile(file, alpha);
+    Textures[name] = loadTextureFromFile(name, file, alpha);
     return Textures[name];
 }
 
@@ -29,6 +31,19 @@ Shader ResourceManager::GetShader(std::string name)
 Texture2D ResourceManager::GetTexture(std::string name)
 {
     return Textures[name];
+}
+
+int ResourceManager::GetSizeTexture(std::string name, sizetype type)
+{
+    switch (type)
+    {
+        case WIDTH:
+            return TexturesWidth[name];
+            break;
+        case HEIGHT:
+            return TexturesHeight[name];
+            break;
+    }
 }
 
 GLvoid ResourceManager::DeleteTexture(std::string name)
@@ -74,7 +89,7 @@ Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLch
     return shader;
 }
 
-Texture2D ResourceManager::loadTextureFromFile(const GLchar *file, GLboolean alpha)
+Texture2D ResourceManager::loadTextureFromFile(std::string name, const GLchar *file, GLboolean alpha)
 {
     // Create Texture object
     Texture2D texture;
@@ -86,6 +101,9 @@ Texture2D ResourceManager::loadTextureFromFile(const GLchar *file, GLboolean alp
     // Load image
     int width, height;
     unsigned char* image = SOIL_load_image(file, &width, &height, 0, texture.Image_Format == GL_RGBA ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
+    // Storage size
+    TexturesWidth[name] = width;
+    TexturesHeight[name] = height;
     // Now generate texture
     texture.Generate(width, height, image);
     // And finally free image data
