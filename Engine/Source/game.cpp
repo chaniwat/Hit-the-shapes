@@ -9,6 +9,7 @@
 #include <mxml.h>
 
 SpriteRender *SpriteRenderer;
+SpriteRender *ShapeRenderer;
 SpriteRender *ColorIDRenderer;
 TextRender *TextRenderer;
 
@@ -32,6 +33,8 @@ static GLfloat fancy_hue = 0.0f;
 
 static GLint pawnthemesize[4][2];
 
+static GLboolean BGMplayflag = GL_FALSE;
+
 GLvoid de_allocatethemepreview();
 
 Game::Game(GLuint width, GLuint heigth) : windowWidth(width), windowHeight(heigth) ,Currentlevel(MENU_LV), Currenttheme(0), Score(0)
@@ -50,22 +53,30 @@ GLvoid Game::init()
 {
     // Load shaders
     ResourceManager::LoadShader("../Shader/sprite.vert", "../Shader/sprite.frag", "sprite");
+    ResourceManager::LoadShader("../Shader/sprite.vert", "../Shader/colortexture.frag", "shape");
     ResourceManager::LoadShader("../Shader/sprite.vert", "../Shader/colorid.frag", "colorid");
     // Load textures
     // UI BG
     ResourceManager::LoadTexture("../Images/home.jpg", GL_FALSE, "openingbg");
-    ResourceManager::LoadTexture("../Images/menubg.jpg", GL_FALSE, "background");
+    ResourceManager::LoadTexture("../Images/bg.jpg", GL_FALSE, "background");
     // Menu Level
-    ResourceManager::LoadTexture("../Images/Button/btn_play.png", GL_TRUE, "ui_btn_play");
-    ResourceManager::LoadTexture("../Images/Button/btn_quit.png", GL_TRUE, "ui_btn_quit");
-    ResourceManager::LoadTexture("../Images/Button/btn_highscore.png", GL_TRUE, "ui_btn_highscore");
-    ResourceManager::LoadTexture("../Images/illu_menu.png", GL_TRUE, "ui_illu_menu");
-    ResourceManager::LoadTexture("../Images/circle_1.png", GL_TRUE, "ui_circle_1");
-    ResourceManager::LoadTexture("../Images/circle_2.png", GL_TRUE, "ui_circle_2");
-    ResourceManager::LoadTexture("../Images/circle_3.png", GL_TRUE, "ui_circle_3");
-    // Other level
-    ResourceManager::LoadTexture("../Images/Button/btn_timeatk.png", GL_TRUE, "ui_btn_timeatk");
-    ResourceManager::LoadTexture("../Images/Button/btn_endless.png", GL_TRUE, "ui_btn_endless");
+    ResourceManager::LoadTexture("../Images/MENU_LV/btn_play.png", GL_TRUE, "ui_btn_play");
+    ResourceManager::LoadTexture("../Images/MENU_LV/btn_quit.png", GL_TRUE, "ui_btn_quit");
+    ResourceManager::LoadTexture("../Images/MENU_LV/btn_highscore.png", GL_TRUE, "ui_btn_highscore");
+    ResourceManager::LoadTexture("../Images/MENU_LV/circle_1.png", GL_TRUE, "ui_circle_1");
+    ResourceManager::LoadTexture("../Images/MENU_LV/circle_2.png", GL_TRUE, "ui_circle_2");
+    ResourceManager::LoadTexture("../Images/MENU_LV/circle_3.png", GL_TRUE, "ui_circle_3");
+    // Theme level
+    ResourceManager::LoadTexture("../Images/THEME_LV/theme_header.png", GL_TRUE, "ui_theme_header");
+    ResourceManager::LoadTexture("../Images/THEME_LV/theme_side.png", GL_TRUE, "ui_theme_side");
+    ResourceManager::LoadTexture("../Images/THEME_LV/theme_left.png", GL_TRUE, "ui_theme_left");
+    ResourceManager::LoadTexture("../Images/THEME_LV/theme_right.png", GL_TRUE, "ui_theme_right");
+    ResourceManager::LoadTexture("../Images/THEME_LV/theme_home.png", GL_TRUE, "ui_theme_home");
+    // Mode level
+    ResourceManager::LoadTexture("../Images/MODE_LV/Mode_btn_time.png", GL_TRUE, "ui_Mode_timeatk");
+    ResourceManager::LoadTexture("../Images/MODE_LV/Mode_btn_endless.png", GL_TRUE, "ui_Mode_endless");
+    ResourceManager::LoadTexture("../Images/MODE_LV/Mode_backtotheme.png", GL_TRUE, "ui_Mode_backtotheme");
+    ResourceManager::LoadTexture("../Images/MODE_LV/Mode_bg.png", GL_TRUE, "ui_Mode_bg");
     // Play level
     ResourceManager::LoadTexture("../Images/frost-frame.png", GL_TRUE, "ui_forst_frame");
     ResourceManager::LoadTexture("../Images/fancy-frame.png", GL_TRUE, "ui_fancy_frame");
@@ -73,8 +84,10 @@ GLvoid Game::init()
     glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(this->windowWidth), static_cast<GLfloat>(this->windowHeight), 0.0f, -1.0f, 1.0f);
     ResourceManager::GetShader("sprite").Use().SetMatrix4("projection", projection);
     ResourceManager::GetShader("colorid").Use().SetMatrix4("projection", projection);
+    ResourceManager::GetShader("shape").Use().SetMatrix4("projection", projection);
     // Set render-specific controls
     SpriteRenderer = new SpriteRender(ResourceManager::GetShader("sprite"));
+    ShapeRenderer = new SpriteRender(ResourceManager::GetShader("shape"));
     ColorIDRenderer = new SpriteRender(ResourceManager::GetShader("colorid"));
     TextRenderer = new TextRender(this->windowWidth, this->windowHeight);
     TextRenderer->Load("../Font/supermarket.ttf", 128);
@@ -82,8 +95,6 @@ GLvoid Game::init()
     this->ChangeLevel(MENU_LV);
     // Load Sound
     ResourceManager::LoadWAVSound("../Sounds/bgm.wav", "BGM");
-    ResourceManager::GetWAVSound("BGM").PlayLoop();
-
     ResourceManager::LoadWAVSound("../Sounds/hit.wav", "HIT");
 }
 
@@ -96,6 +107,11 @@ GLvoid Game::Update(GLfloat dt)
             waitopeningtime -= dt;
             if (waitopeningtime < 1)
             {
+                if (!BGMplayflag)
+                {
+                    BGMplayflag = GL_TRUE;
+                    ResourceManager::GetWAVSound("BGM").PlayLoop();
+                }
                 alpha -= dt;
             }
         }
@@ -293,13 +309,25 @@ GLvoid Game::ProcessInput()
             {
                 itr.DrawColorID(*ColorIDRenderer);
             }
+            if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 1.0f && themepage != 1)
+            {
+                itr.DrawColorID(*ColorIDRenderer);
+            }
             if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 0.0f && themepage != thememaxpage)
             {
                 itr.DrawColorID(*ColorIDRenderer);
             }
+            if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 1.0f && themepage != thememaxpage)
+            {
+                itr.DrawColorID(*ColorIDRenderer);
+            }
             else if(this->Currentlevel != THEME_LV) itr.DrawColorID(*ColorIDRenderer);
+            if (this->Currentlevel == THEME_LV && itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 3.0f && itr.ColorID.b * 255.0f == 0.0f)
+            {
+                itr.DrawColorID(*ColorIDRenderer);
+            }
         }
-
+         
         // Read Color pixel at cursor
         glGetIntegerv(GL_VIEWPORT, viewport);
         glfwGetCursorPos(Getwindow(), &xpos, &ypos);
@@ -416,13 +444,18 @@ GLvoid Game::ProcessInput()
                             this->LoadGameTheme(pathlist[i]);
                             de_allocatethemepreview();
                         }
-                        else if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        else if ((itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 0.0f) || (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 1.0f))
                         {
                             themepage--;
                         }
-                        else if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        else if ((itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 0.0f) || (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 2.0f && itr.ColorID.b * 255.0f == 1.0f))
                         {
                             themepage++;
+                        }
+                        else if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 3.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            de_allocatethemepreview();
+                            this->ChangeLevel(MENU_LV);
                         }
                     }
                     else if (this->Currentlevel == MODE_LV)
@@ -438,6 +471,12 @@ GLvoid Game::ProcessInput()
                             this->ChangeLevel(PLAY_LV);
                             this->Currentmode = ENDLESS;
                             this->Lives = 15;
+                        }
+                        else if (itr.ColorID.r * 255.0f == 3.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            this->RenderLoading("Loading Themes...", 0.60f);
+                            this->ResetGame();
+                            this->ChangeLevel(THEME_LV);
                         }
                     }
                     break;
@@ -491,12 +530,77 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
         if (this->Currentlevel == MENU_LV)
         {
             SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
-            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_illu_menu"), glm::vec2((this->windowWidth / 2) - 224, (this->windowHeight / 2) - 257), glm::vec2(500, 520), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_1"), glm::vec2((this->windowWidth / 2) - 167, (this->windowHeight / 2) - 157), glm::vec2(334, 318), circle1_angle, glm::vec3(1.0f, 1.0f, 1.0f));
-            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_2"), glm::vec2((this->windowWidth / 2) - 212, (this->windowHeight / 2) - 197), glm::vec2(414, 394), circle2_angle, glm::vec3(1.0f, 1.0f, 1.0f));
-            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_3"), glm::vec2((this->windowWidth / 2) - 260, (this->windowHeight / 2) - 245), glm::vec2(520, 494), circle3_angle, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_3"), glm::vec2((this->windowWidth / 2) - (347.0f / 2.0f), (this->windowHeight / 2) - (346.0f / 2.0f)), glm::vec2(347, 346), circle3_angle, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_2"), glm::vec2((this->windowWidth / 2) - (415.0f / 2.0f), (this->windowHeight / 2) - (414.0f / 2.0f)), glm::vec2(415, 414), circle2_angle, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_1"), glm::vec2((this->windowWidth / 2) - (523.0f / 2.0f), (this->windowHeight / 2) - (522.0f / 2.0f)), glm::vec2(523, 522), circle1_angle, glm::vec3(1.0f, 1.0f, 1.0f));
         }
-        else SpriteRenderer->Draw(ResourceManager::GetTexture("theme_background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        else
+        {
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("ui_Mode_bg"), glm::vec2(0, 0), glm::vec2(this->windowWidth, 688), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+            GLfloat factorsize;
+            GLfloat width, height;
+
+            if (pawnthemesize[0][0] > pawnthemesize[0][1])
+            {
+                factorsize = pawnthemesize[0][0] / 100.0;
+                width = 100.0f;
+                height = pawnthemesize[0][1] / factorsize;
+            }
+            else
+            {
+                factorsize = pawnthemesize[0][1] / 100.0;
+                height = 100.0f;
+                width = pawnthemesize[0][0] / factorsize;
+            }
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_pawn1"), glm::vec2(35 + ((100 - width) / 2), 249 + ((100 - height) / 2)), glm::vec2(width, height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_pawn1"), glm::vec2(555 + ((100 - width) / 2), 249 + ((100 - height) / 2)), glm::vec2(width, height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+            if (pawnthemesize[1][0] > pawnthemesize[1][1])
+            {
+                factorsize = pawnthemesize[1][0] / 100.0;
+                width = 100.0f;
+                height = pawnthemesize[1][1] / factorsize;
+            }
+            else
+            {
+                factorsize = pawnthemesize[1][1] / 100.0;
+                height = 100.0f;
+                width = pawnthemesize[1][0] / factorsize;
+            }
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_pawn2"), glm::vec2(201 + ((100 - width) / 2), 249 + ((100 - height) / 2)), glm::vec2(width, height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_pawn2"), glm::vec2(721 + ((100 - width) / 2), 249 + ((100 - height) / 2)), glm::vec2(width, height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+            if (pawnthemesize[2][0] > pawnthemesize[2][1])
+            {
+                factorsize = pawnthemesize[2][0] / 100.0;
+                width = 100.0f;
+                height = pawnthemesize[2][1] / factorsize;
+            }
+            else
+            {
+                factorsize = pawnthemesize[2][1] / 100.0;
+                height = 100.0f;
+                width = pawnthemesize[2][0] / factorsize;
+            }
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_pawn3"), glm::vec2(367 + ((100 - width) / 2), 249 + ((100 - height) / 2)), glm::vec2(width, height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_pawn3"), glm::vec2(887 + ((100 - width) / 2), 249 + ((100 - height) / 2)), glm::vec2(width, height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+            if (pawnthemesize[3][0] > pawnthemesize[3][1])
+            {
+                factorsize = pawnthemesize[3][0] / 100.0;
+                width = 100.0f;
+                height = pawnthemesize[3][1] / factorsize;
+            }
+            else
+            {
+                factorsize = pawnthemesize[3][1] / 100.0;
+                height = 100.0f;
+                width = pawnthemesize[3][0] / factorsize;
+            }
+            SpriteRenderer->Draw(ResourceManager::GetTexture("theme_slow"), glm::vec2(459 + ((100 - width) / 2), 487 + ((100 - height) / 2)), glm::vec2(width, height), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+        }
 
         for (UIButton &itr : this->Buttons)
         {
@@ -515,6 +619,14 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
             {
                 itr.Draw(*SpriteRenderer);
             }
+            if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 3.0f && itr.ColorID.b * 255.0f == 0.0f)
+            {
+                itr.Draw(*SpriteRenderer);
+            }
+            if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f > 0.0f && itr.ColorID.b * 255.0f == 1.0f)
+            {
+                itr.Draw(*SpriteRenderer);
+            }
             if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 1.0f && itr.ColorID.b * 255.0f == 0.0f && themepage != 1)
             {
                 itr.Draw(*SpriteRenderer);
@@ -524,6 +636,8 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
                 itr.Draw(*SpriteRenderer);
             }
         }
+
+        SpriteRenderer->Draw(ResourceManager::GetTexture("ui_theme_header"), glm::vec2(0, 0), glm::vec2(this->windowWidth, 93), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
     }
     else
     {
@@ -584,20 +698,20 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                 GLfloat percentofrarespawn = std::rand() % 10000;
                 if (percentofrarespawn >= 0 && percentofrarespawn <= 6000)
                 {
-                    if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100;
-                    else factorsize = pawnthemesize[0][1] / 100;
+                    if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100.0;
+                    else factorsize = pawnthemesize[0][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1")));
                 }
                 else if (percentofrarespawn >= 6001 && percentofrarespawn <= 8500)
                 {
-                    if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 80;
-                    else factorsize = pawnthemesize[1][1] / 80;
+                    if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 100.0;
+                    else factorsize = pawnthemesize[1][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.5, 3, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
                 }
                 else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9550)
                 {
-                    if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 60;
-                    else factorsize = pawnthemesize[2][1] / 60;
+                    if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 100.0;
+                    else factorsize = pawnthemesize[2][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 1.75, 5, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
                 }
                 else if (percentofrarespawn >= 9551 && percentofrarespawn <= 9999)
@@ -607,8 +721,8 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     if (typerand == 1) type = SLOW;
                     else if (typerand == 2) type = MULTIPLIER;
                     else if (typerand == 3) type = DESTROY;
-                    if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100;
-                    else factorsize = pawnthemesize[3][1] / 100;
+                    if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100.0;
+                    else factorsize = pawnthemesize[3][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
                 }
                 if (this->RSCID_red != 255)
@@ -645,20 +759,20 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                 GLfloat percentofrarespawn = std::rand() % 10000;
                 if (percentofrarespawn >= 0 && percentofrarespawn <= 6000)
                 {
-                    if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100;
-                    else factorsize = pawnthemesize[0][1] / 100;
+                    if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100.0;
+                    else factorsize = pawnthemesize[0][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1")));
                 }
                 else if (percentofrarespawn >= 6001 && percentofrarespawn <= 8500)
                 {
-                    if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 100;
-                    else factorsize = pawnthemesize[1][1] / 100;
+                    if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 100.0;
+                    else factorsize = pawnthemesize[1][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
                 }
                 else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9550)
                 {
-                    if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 100;
-                    else factorsize = pawnthemesize[2][1] / 100;
+                    if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 100.0;
+                    else factorsize = pawnthemesize[2][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
                 }
                 else if (percentofrarespawn >= 9551 && percentofrarespawn <= 9999)
@@ -668,8 +782,8 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     if (typerand == 1) type = SLOW;
                     else if (typerand == 2) type = MULTIPLIER;
                     else if (typerand == 3) type = DESTROY;
-                    if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100;
-                    else factorsize = pawnthemesize[3][1] / 100;
+                    if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100.0;
+                    else factorsize = pawnthemesize[3][1] / 100.0;
                     this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
                 }
                 if (this->RSCID_red != 255)
@@ -696,15 +810,16 @@ GLvoid Game::SpawnPawn(GLfloat dt)
 GLvoid Game::ChangeLevel(GameLevel level)
 {
     this->Buttons.clear();
+    this->RectanglePawn.clear();
     this->ResetColorID();
     
     if (level == MENU_LV)
     {
         this->Currentlevel = MENU_LV;
 
-        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - (267.0 / 2.0), (this->windowHeight / 2) - 124.0), glm::vec2(267, 124), ResourceManager::GetTexture("ui_btn_play")));
-        this->Buttons.push_back(UIButton(glm::vec3(2.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - 167.0, (this->windowHeight / 2)), glm::vec2(167, 158), ResourceManager::GetTexture("ui_btn_quit")));
-        this->Buttons.push_back(UIButton(glm::vec3(3.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2), (this->windowHeight / 2)), glm::vec2(208, 199), ResourceManager::GetTexture("ui_btn_highscore")));
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - (271.0 / 2.0), (this->windowHeight / 2) - 136.0), glm::vec2(271, 137), ResourceManager::GetTexture("ui_btn_play")));
+        this->Buttons.push_back(UIButton(glm::vec3(2.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - 175.0, (this->windowHeight / 2)), glm::vec2(176, 174), ResourceManager::GetTexture("ui_btn_quit")));
+        this->Buttons.push_back(UIButton(glm::vec3(3.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - 1.0, (this->windowHeight / 2)), glm::vec2(210, 210), ResourceManager::GetTexture("ui_btn_highscore")));
     }
     else if (level == THEME_LV)
     {
@@ -738,7 +853,7 @@ GLvoid Game::ChangeLevel(GameLevel level)
                 sprintf(temptheme[themecount], "Theme%03d", themecount);
 
                 ResourceManager::LoadTexture(pathtopreview, GL_TRUE, temptheme[themecount]);
-                this->Buttons.push_back(UIButton(glm::vec3(this->RSCID_red++ / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((300 * ((themecount % 9) % 3)) + 58, (225 * (((themecount % 9) / 3) % 3) + 32)), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
+                this->Buttons.push_back(UIButton(glm::vec3(this->RSCID_red++ / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((300 * ((themecount % 9) % 3)) + 62, (225 * (((themecount % 9) / 3) % 3) + 93)), glm::vec2(300, 225), ResourceManager::GetTexture(temptheme[themecount])));
 
                 themecount++;
             }
@@ -751,17 +866,25 @@ GLvoid Game::ChangeLevel(GameLevel level)
 
         thememaxpage = ceil(themecount / 9.0f);
 
-        ResourceManager::LoadTexture("../Images/Button/prevpagetheme.png", GL_TRUE, "prevpagetheme");
-        ResourceManager::LoadTexture("../Images/Button/nextpagetheme.png", GL_TRUE, "nextpagetheme");
-        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 1.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, this->windowHeight - 80), glm::vec2(180, 80), ResourceManager::GetTexture("prevpagetheme")));
-        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 2.0f / 255.0f, 0.0f / 255.0f), glm::vec2(this->windowWidth - 180, this->windowHeight - 80), glm::vec2(180, 80), ResourceManager::GetTexture("nextpagetheme")));
+        // Side btn
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f), glm::vec2(0, 93), glm::vec2(64, 675), ResourceManager::GetTexture("ui_theme_side")));
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 1.0f / 255.0f, 0.0f / 255.0f), glm::vec2((64.0 / 2.0) - (31.0 / 2.0), ((675.0 / 2.0) - (165.0 / 2.0)) + 93), glm::vec2(31, 165), ResourceManager::GetTexture("ui_theme_left")));
+
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 2.0f / 255.0f, 1.0f / 255.0f), glm::vec2(962, 93), glm::vec2(64, 675), ResourceManager::GetTexture("ui_theme_side")));
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 2.0f / 255.0f, 0.0f / 255.0f), glm::vec2(((64.0 / 2.0) - (33.0 / 2.0)) + 962, ((675.0 / 2.0) - (162.0 / 2.0)) + 93), glm::vec2(33, 162), ResourceManager::GetTexture("ui_theme_right")));
+        
+        // HOME btn
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 3.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2) - (224.0 / 2.0), this->windowHeight - 53.0), glm::vec2(224, 53), ResourceManager::GetTexture("ui_theme_home")));
     }
     else if (level == MODE_LV)
     {
+        themepage = 1;
+
         this->Currentlevel = MODE_LV;
 
-        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, 0), glm::vec2(250, 88), ResourceManager::GetTexture("ui_btn_timeatk")));
-        this->Buttons.push_back(UIButton(glm::vec3(2.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, 98), glm::vec2(250, 88), ResourceManager::GetTexture("ui_btn_endless")));
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(0, this->windowHeight - 80), glm::vec2(367, 80), ResourceManager::GetTexture("ui_Mode_timeatk")));
+        this->Buttons.push_back(UIButton(glm::vec3(3.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(367, this->windowHeight - 80), glm::vec2(289, 80), ResourceManager::GetTexture("ui_Mode_backtotheme")));
+        this->Buttons.push_back(UIButton(glm::vec3(2.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2(656, this->windowHeight - 80), glm::vec2(368, 80), ResourceManager::GetTexture("ui_Mode_endless")));
     }
     else if (level == PLAY_LV)
     {

@@ -20,6 +20,7 @@
 
 #include "ui_button.h"
 #include "game_pawn.h"
+#include "obj_rectangle.h"
 
 enum GameLevel { MENU_LV, THEME_LV, MODE_LV, PLAY_LV };
 enum GameMode { TIME_ATTACK, ENDLESS };
@@ -44,6 +45,7 @@ class Game
         GLfloat RSCID_red = 1.0f, RSCID_green = 0.0f, RSCID_blue = 0.0f; // RSCID - Random Spawn ColorID - Used for click on object checking
         std::vector<UIButton> Buttons;
         std::vector<GamePawn> Pawn;
+        std::vector<OBJRectangle> RectanglePawn;
         // Draw level
         GLvoid DrawCurrentLevel(GLfloat dt);
         // Pawn in game

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<theme>
+    <!-- Theme information -->
+    <name>City</name>
+    <author>mimi</author>
+    
+    <!-- Theme Preview -->
+    <preview>preview.jpg</preview>
+
+    <!-- Theme Background | in folder bg/ -->
+    <bg>bg.jpg</bg>
+
+    <!-- Pawns list | in folder pawn/ -->
+    <pawn>
+        <class>1</class>
+        <texture>1.png</texture>
+        <score>1</score>
+        <alivetime>3.0</alivetime>
+        <size>100</size>
+    </pawn>
+    <pawn>
+        <class>2</class>
+        <texture>2.png</texture>
+        <score>3</score>
+        <alivetime>2.5</alivetime>
+        <size>80</size>
+    </pawn>
+    <pawn>
+        <class>3</class>
+        <texture>3.png</texture>
+        <score>5</score>
+        <alivetime>1.75</alivetime>
+        <size>60</size>
+    </pawn>
+    <!-- Size max 100 -->
+    
+    <!-- Power-Ups | in folder powerup/ -->
+    <slow>slow.png</slow>
+</theme>

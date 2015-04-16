@@ -14,6 +14,7 @@
     <ClCompile Include="Source\game.cpp" />
     <ClCompile Include="Source\game_pawn.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\obj_rectangle.cpp" />
     <ClCompile Include="Source\resourcemanager.cpp" />
     <ClCompile Include="Source\shader.cpp" />
     <ClCompile Include="Source\sound.cpp" />
@@ -27,6 +28,7 @@
     <ClInclude Include="Source\game.h" />
     <ClInclude Include="Source\game_pawn.h" />
     <ClInclude Include="Source\main.h" />
+    <ClInclude Include="Source\obj_rectangle.h" />
     <ClInclude Include="Source\resourcemanager.h" />
     <ClInclude Include="Source\shader.h" />
     <ClInclude Include="Source\sound.h" />
@@ -37,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\colorid.frag" />
+    <None Include="Shader\colortexture.frag" />
     <None Include="Shader\sprite.frag" />
     <None Include="Shader\sprite.vert" />
     <None Include="Shader\text.frag" />

@@ -11,12 +11,12 @@
 class SpriteRender
 {
     private:
-        // Render State
-        Shader shader;
         GLuint VAO, VBO, EBO;
         // Initializes and configures
         GLvoid initRenderData();
     public:
+        // Render State
+        Shader shader;
         // Constructor/Deconstructor
         SpriteRender(Shader &shader);
         ~SpriteRender();

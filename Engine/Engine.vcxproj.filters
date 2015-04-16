@@ -48,6 +48,9 @@
     <ClCompile Include="Source\sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\obj_rectangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\dirent.h">
@@ -83,6 +86,9 @@
     <ClInclude Include="Source\sound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\obj_rectangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shader\sprite.frag">
@@ -98,6 +104,9 @@
       <Filter>Source Files\Shader</Filter>
     </None>
     <None Include="Shader\colorid.frag">
+      <Filter>Source Files\Shader</Filter>
+    </None>
+    <None Include="Shader\colortexture.frag">
       <Filter>Source Files\Shader</Filter>
     </None>
   </ItemGroup>
