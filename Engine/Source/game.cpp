@@ -308,6 +308,7 @@ GLvoid Game::ProcessInput()
                     {
                         if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
+                            this->RenderLoading("Loading Themes...", 0.60f);
                             this->ChangeLevel(THEME_LV);
                         }
                         else if (itr.ColorID.r * 255.0f == 2.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
@@ -319,6 +320,7 @@ GLvoid Game::ProcessInput()
                     {
                         if (itr.ColorID.r * 255.0f >= 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
+                            this->RenderLoading("Loading Selected Themes...", 0.60f);
                             this->ChangeLevel(MODE_LV);
                             int i = itr.ColorID.r * 255.0f;
                             this->LoadGameTheme(pathlist[i]);
@@ -735,20 +737,12 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
     fclose(fp);
 
     mxml_node_t *classnode;
-    mxml_node_t *widthnode;
-    mxml_node_t *heightnode;
 
     //int i = 0;
 
     for (classnode = mxmlFindElement(tree, tree, "class", NULL, NULL, MXML_DESCEND); classnode != NULL; classnode = mxmlFindElement(classnode, tree, "class", NULL, NULL, MXML_DESCEND))
     {
-        widthnode = mxmlFindElement(classnode, tree, "width", NULL, NULL, MXML_DESCEND);
-        heightnode = mxmlFindElement(classnode, tree, "height", NULL, NULL, MXML_DESCEND);
         printf("Class: %s\n", classnode->child->value.text.string);
-        printf("Width: %s\n", widthnode->child->value.text.string);
-        printf("Height: %s\n", heightnode->child->value.text.string);
-        //pawnthemesize[i][0] = atoi(widthnode->child->value.text.string);
-        //pawnthemesize[i][1] = atoi(heightnode->child->value.text.string);
         //i++;
     }
 
@@ -768,6 +762,15 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
     ResourceManager::LoadTexture(pathtoslow, GL_TRUE, "theme_slow");
     pawnthemesize[3][0] = ResourceManager::GetSizeTexture("theme_slow", WIDTH);
     pawnthemesize[3][1] = ResourceManager::GetSizeTexture("theme_slow", HEIGHT);
+}
+
+GLvoid Game::RenderLoading(std::string text, GLfloat size)
+{
+    this->Buttons.clear();
+    this->ResetColorID();
+    SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+    TextRenderer->RenderText(text, this->windowWidth / 2, this->windowHeight / 2, size, glm::vec3(255.0f / 255.0f, 28.0f / 255.0f, 202.0f / 255.0f));
+    glfwSwapBuffers(Getwindow());
 }
 
 GLvoid de_allocatethemepreview()
