@@ -3,6 +3,8 @@
 #include "main.h"
 #include <mxml.h>
 
+#include <conio.h>
+
 Game Hittheshapes(1024, 768);
 
 // Window declerations
@@ -14,7 +16,7 @@ GLFWcursor* cursor_pointer;
 GLvoid key_callback(GLFWwindow* window, GLint key, GLint scancode, GLint action, GLint mode);
 GLvoid mouse_callback(GLFWwindow* window, GLint button, GLint action, GLint mods);
 
-int main()
+int main(int argc, char **argv)
 {
     glfwInit();
 
@@ -28,6 +30,15 @@ int main()
 
     glewExperimental = GL_TRUE;
     glewInit();
+
+    ALCcontext *context;
+    ALCdevice *device;
+
+    device = alcOpenDevice(NULL);
+    context = alcCreateContext(device, NULL);
+    alcMakeContextCurrent(context);
+    alGetError();
+    alutInit(&argc, argv);
 
     cursor_arrow = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
     cursor_pointer = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
@@ -78,6 +89,12 @@ int main()
     }
 
     ResourceManager::Clear();
+    alutExit();
+    context = alcGetCurrentContext();
+    device = alcGetContextsDevice(context);
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(context);
+    alcCloseDevice(device);
     glfwTerminate();
     return 0;
 }

@@ -16,6 +16,7 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\resourcemanager.cpp" />
     <ClCompile Include="Source\shader.cpp" />
+    <ClCompile Include="Source\sound.cpp" />
     <ClCompile Include="Source\spriterender.cpp" />
     <ClCompile Include="Source\textrender.cpp" />
     <ClCompile Include="Source\texture.cpp" />
@@ -28,6 +29,7 @@
     <ClInclude Include="Source\main.h" />
     <ClInclude Include="Source\resourcemanager.h" />
     <ClInclude Include="Source\shader.h" />
+    <ClInclude Include="Source\sound.h" />
     <ClInclude Include="Source\spriterender.h" />
     <ClInclude Include="Source\textrender.h" />
     <ClInclude Include="Source\texture.h" />
@@ -93,7 +95,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)Library\lib_x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;OpenAL32.lib;glfw3.lib;glew32s.lib;SOIL.lib;freetype.lib;mxml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;OpenAL32.lib;glfw3.lib;glew32s.lib;SOIL.lib;freetype.lib;mxml.lib;alut.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -113,7 +115,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)Library\lib_x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;OpenAL32.lib;glfw3.lib;glew32s.lib;SOIL.lib;freetype.lib;mxml.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;OpenAL32.lib;glfw3.lib;glew32s.lib;SOIL.lib;freetype.lib;mxml.lib;alut.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

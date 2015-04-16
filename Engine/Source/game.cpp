@@ -4,7 +4,7 @@
 #include "spriterender.h"
 #include "textrender.h"
 #include "dirent.h"
-//#include "sound.h"
+#include "sound.h"
 
 #include <mxml.h>
 
@@ -26,6 +26,9 @@ static GLfloat circle2_angle = 0.0f;
 static GLfloat circle3_angle = 0.0f;
 
 static GLfloat forst_frame_alpha = 0.0f;
+static GLfloat fancy_frame_alpha = 0.0f;
+
+static GLfloat fancy_hue = 0.0f;
 
 static GLint pawnthemesize[4][2];
 
@@ -65,6 +68,7 @@ GLvoid Game::init()
     ResourceManager::LoadTexture("../Images/Button/btn_endless.png", GL_TRUE, "ui_btn_endless");
     // Play level
     ResourceManager::LoadTexture("../Images/frost-frame.png", GL_TRUE, "ui_forst_frame");
+    ResourceManager::LoadTexture("../Images/fancy-frame.png", GL_TRUE, "ui_fancy_frame");
     // Configure shaders
     glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(this->windowWidth), static_cast<GLfloat>(this->windowHeight), 0.0f, -1.0f, 1.0f);
     ResourceManager::GetShader("sprite").Use().SetMatrix4("projection", projection);
@@ -76,6 +80,11 @@ GLvoid Game::init()
     TextRenderer->Load("../Font/supermarket.ttf", 128);
     // Initialize level
     this->ChangeLevel(MENU_LV);
+    // Load Sound
+    ResourceManager::LoadWAVSound("../Sounds/bgm.wav", "BGM");
+    ResourceManager::GetWAVSound("BGM").PlayLoop();
+
+    ResourceManager::LoadWAVSound("../Sounds/hit.wav", "HIT");
 }
 
 GLvoid Game::Update(GLfloat dt)
@@ -100,69 +109,75 @@ GLvoid Game::Update(GLfloat dt)
     }
     else 
     {
-        if (this->SlowMode && this->SlowTime > 0)
+        if (this->CurrentPlayState == PLAY && this->Time > 0)
         {
-            this->SlowTime -= dt;
-            if (forst_frame_alpha < 1 && this->SlowTime > 0.5f)
+            if (this->SlowMode && this->SlowTime > 0)
             {
-                forst_frame_alpha += dt * 2;
-                if (forst_frame_alpha > 1) forst_frame_alpha = 1.0;
-            }
-            else if (forst_frame_alpha > 0)
-            {
-                forst_frame_alpha -= dt * 2;
-                if (forst_frame_alpha < 0) forst_frame_alpha = 0.0;
-            }
-        }
-        else if (this->SlowMode && this->SlowTime <= 0)
-        {
-            this->SlowMode = GL_FALSE;
-            this->SlowTime = 0;
-
-            std::cout << "Slow mode expired!" << std::endl;
-        }
-
-        if (this->MultiMode && this->MultiTime > 0)
-        {
-            this->MultiTime -= dt;
-            /*if (forst_frame_alpha < 1 && this->MultiTime > 0.5f)
-            {
-                forst_frame_alpha += dt * 2;
-                if (forst_frame_alpha > 1) forst_frame_alpha = 1.0;
-            }
-            else if (forst_frame_alpha > 0)
-            {
-                forst_frame_alpha -= dt * 2;
-                if (forst_frame_alpha < 0) forst_frame_alpha = 0.0;
-            }*/
-        }
-        else if (this->MultiMode && this->MultiTime <= 0)
-        {
-            this->MultiMode = GL_FALSE;
-            this->MultiTime = 0;
-
-            std::cout << "Multiplier mode expired!" << std::endl;
-        }
-
-        if (this->DestroyMode)
-        {
-            for (GamePawn &itr : this->Pawn)
-            {
-                // Destroy pawn and add score
-                if (itr.isDestroyed) continue;
-                if (this->MultiMode)
+                this->SlowTime -= dt;
+                if (forst_frame_alpha < 1 && this->SlowTime > 0.5f)
                 {
-                    std::cout << "You get: " << itr.Score * 2 << " scores for destroy powerup." << std::endl;
-                    this->Score += itr.Score * 2;
+                    forst_frame_alpha += dt * 2;
+                    if (forst_frame_alpha > 1) forst_frame_alpha = 1.0;
                 }
-                else
+                else if (forst_frame_alpha > 0)
                 {
-                    std::cout << "You get: " << itr.Score << " scores for destroy powerup." << std::endl;
-                    this->Score += itr.Score;
+                    forst_frame_alpha -= dt * 2;
+                    if (forst_frame_alpha < 0) forst_frame_alpha = 0.0;
                 }
-                itr.isDestroyed = GL_TRUE;
             }
-            this->DestroyMode = GL_FALSE;
+            else if (this->SlowMode && this->SlowTime <= 0)
+            {
+                this->SlowMode = GL_FALSE;
+                this->SlowTime = 0;
+
+                std::cout << "Slow mode expired!" << std::endl;
+            }
+
+            if (this->MultiMode && this->MultiTime > 0)
+            {
+                fancy_hue += 3 * dt;
+                if (fancy_hue > 360.0f) fancy_hue = fmod(fancy_hue, 360.0f);
+
+                this->MultiTime -= dt;
+                if (fancy_frame_alpha < 1 && this->MultiTime > 0.5f)
+                {
+                    fancy_frame_alpha += dt * 2;
+                    if (fancy_frame_alpha > 1) fancy_frame_alpha = 1.0;
+                }
+                else if (fancy_frame_alpha > 0)
+                {
+                    fancy_frame_alpha -= dt * 2;
+                    if (fancy_frame_alpha < 0) fancy_frame_alpha = 0.0;
+                }
+            }
+            else if (this->MultiMode && this->MultiTime <= 0)
+            {
+                this->MultiMode = GL_FALSE;
+                this->MultiTime = 0;
+
+                std::cout << "Multiplier mode expired!" << std::endl;
+            }
+
+            if (this->DestroyMode)
+            {
+                for (GamePawn &itr : this->Pawn)
+                {
+                    // Destroy pawn and add score
+                    if (itr.isDestroyed || itr.special) continue;
+                    if (this->MultiMode)
+                    {
+                        std::cout << "You get: " << itr.Score * 2 << " scores for destroy powerup." << std::endl;
+                        this->Score += itr.Score * 2;
+                    }
+                    else
+                    {
+                        std::cout << "You get: " << itr.Score << " scores for destroy powerup." << std::endl;
+                        this->Score += itr.Score;
+                    }
+                    itr.isDestroyed = GL_TRUE;
+                }
+                this->DestroyMode = GL_FALSE;
+            }
         }
 
         if (this->Currentmode == TIME_ATTACK) 
@@ -331,6 +346,7 @@ GLvoid Game::ProcessInput()
                             this->Score += itr.Score;
                         }
                         itr.isDestroyed = GL_TRUE;
+                        ResourceManager::GetWAVSound("HIT").PlayOnce();
                     }
                     else if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && itr.special)
                     {
@@ -353,6 +369,7 @@ GLvoid Game::ProcessInput()
                             std::cout << "Destroy all." << std::endl;
                         }
                         itr.isDestroyed = GL_TRUE;
+                        ResourceManager::GetWAVSound("HIT").PlayOnce();
                     }
                 }
             }
@@ -473,7 +490,7 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
     {
         if (this->Currentlevel == MENU_LV)
         {
-            SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, 180.0f);
+            SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_illu_menu"), glm::vec2((this->windowWidth / 2) - 224, (this->windowHeight / 2) - 257), glm::vec2(500, 520), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_1"), glm::vec2((this->windowWidth / 2) - 167, (this->windowHeight / 2) - 157), glm::vec2(334, 318), circle1_angle, glm::vec3(1.0f, 1.0f, 1.0f));
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_2"), glm::vec2((this->windowWidth / 2) - 212, (this->windowHeight / 2) - 197), glm::vec2(414, 394), circle2_angle, glm::vec3(1.0f, 1.0f, 1.0f));
@@ -518,7 +535,8 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
             itr.Draw(*SpriteRenderer);
         }
 
-        if (this->SlowMode) SpriteRenderer->Draw(ResourceManager::GetTexture("ui_forst_frame"), glm::vec2(-30, -30), glm::vec2(this->windowWidth+60, this->windowHeight+60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), forst_frame_alpha);
+        if (this->MultiMode) SpriteRenderer->Draw(ResourceManager::GetTexture("ui_fancy_frame"), glm::vec2(-20, -20), glm::vec2(this->windowWidth + 40, this->windowHeight + 40), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), fancy_frame_alpha, fancy_hue);
+        if (this->SlowMode) SpriteRenderer->Draw(ResourceManager::GetTexture("ui_forst_frame"), glm::vec2(-30, -30), glm::vec2(this->windowWidth + 60, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), forst_frame_alpha);
 
         static GLchar buffertext[32];
         sprintf(buffertext, "Score: %d", this->Score);
