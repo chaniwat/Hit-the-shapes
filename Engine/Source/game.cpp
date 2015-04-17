@@ -79,6 +79,11 @@ GLvoid Game::init()
     ResourceManager::LoadTexture("../Images/MODE_LV/Mode_bg.png", GL_TRUE, "ui_Mode_bg");
     // Play level
     ResourceManager::LoadTexture("../Images/PLAY_LV/play_btn_pause.png", GL_TRUE, "ui_play_btn_pause");
+    ResourceManager::LoadTexture("../Images/PLAY_LV/play_timeatk_restart.png", GL_TRUE, "ui_play_timeatk_restart");
+    ResourceManager::LoadTexture("../Images/PLAY_LV/play_timeatk_continue.png", GL_TRUE, "ui_play_timeatk_continue");
+    ResourceManager::LoadTexture("../Images/PLAY_LV/play_endless_restart.png", GL_TRUE, "ui_play_endless_restart");
+    ResourceManager::LoadTexture("../Images/PLAY_LV/play_endless_continue.png", GL_TRUE, "ui_play_endless_continue");
+    ResourceManager::LoadTexture("../Images/PLAY_LV/play_mainmenu.png", GL_TRUE, "ui_play_mainmenu");
     ResourceManager::LoadTexture("../Images/frost-frame.png", GL_TRUE, "ui_forst_frame");
     ResourceManager::LoadTexture("../Images/fancy-frame.png", GL_TRUE, "ui_fancy_frame");
     // Configure shaders
@@ -291,11 +296,25 @@ GLvoid Game::ProcessInput()
                 // Render pawn color to color ID
                 itr.DrawColorID(*ColorIDRenderer);
             }
+        }
 
-            // Render the color ID
-            for (UIButton &itr : this->Buttons)
+        // Render the color ID
+        for (UIButton &itr : this->Buttons)
+        {
+            if (this->CurrentPlayState == PLAY)
             {
-                itr.DrawColorID(*ColorIDRenderer);
+                if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 255.0f)
+                    itr.DrawColorID(*ColorIDRenderer);
+            }
+            else if (this->CurrentPlayState == PAUSE)
+            {
+                if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f < 255.0f && itr.ColorID.b * 255.0f > 251.0f)
+                    itr.DrawColorID(*ColorIDRenderer);
+            }
+            else if (this->CurrentPlayState == END)
+            {
+                if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f < 252.0f && itr.ColorID.b * 255.0f > 249.0f)
+                    itr.DrawColorID(*ColorIDRenderer);
             }
         }
 
@@ -398,76 +417,87 @@ GLvoid Game::ProcessInput()
             std::cout << "X: " << xpos << " Y: " << ypos << std::endl;
             std::cout << "R: " << (int)pixel[0] << " G: " << (int)pixel[1] << " B: " << (int)pixel[2] << std::endl;
 
-            if (this->CurrentPlayState == PLAY)
+            // Check what object is cursor over and do something
+            for (GamePawn &itr : this->Pawn)
             {
-                // Check what object is cursor over and do something
-                for (GamePawn &itr : this->Pawn)
+                if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && !itr.special)
                 {
-                    if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && !itr.special)
+                    // Destroy pawn and add score
+                    if (this->MultiMode)
                     {
-                        // Destroy pawn and add score
-                        if (this->MultiMode)
-                        {
-                            std::cout << "You get: " << itr.Score * 2 << " scores for clicking." << std::endl;
-                            this->Score += itr.Score * 2;
-                        }
-                        else
-                        {
-                            std::cout << "You get: " << itr.Score << " scores for clicking." << std::endl;
-                            this->Score += itr.Score;
-                        }
-                        itr.isDestroyed = GL_TRUE;
-                        ResourceManager::GetWAVSound("HIT").PlayOnce();
+                        std::cout << "You get: " << itr.Score * 2 << " scores for clicking." << std::endl;
+                        this->Score += itr.Score * 2;
                     }
-                    else if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && itr.special)
+                    else
                     {
-                        // Destroy pawn and add score
-                        if (itr.specialtype == SLOW) 
-                        {
-                            this->SlowMode = GL_TRUE;
-                            std::cout << "Slow mode engage for 5 seconds!" << std::endl;
-                            this->SlowTime = 5;
-                        }
-                        else if (itr.specialtype == MULTIPLIER)
-                        {
-                            this->MultiMode = GL_TRUE;
-                            std::cout << "Multiplier mode engage for 5 seconds!" << std::endl;
-                            this->MultiTime = 5;
-                        }
-                        else if (itr.specialtype == DESTROY)
-                        {
-                            this->DestroyMode = GL_TRUE;
-                            std::cout << "Destroy all." << std::endl;
-                        }
-                        itr.isDestroyed = GL_TRUE;
-                        ResourceManager::GetWAVSound("HIT").PlayOnce();
+                        std::cout << "You get: " << itr.Score << " scores for clicking." << std::endl;
+                        this->Score += itr.Score;
                     }
+                    itr.isDestroyed = GL_TRUE;
+                    ResourceManager::GetWAVSound("HIT").PlayOnce();
                 }
-
-                // Check what object is cursor over and do something
-                for (UIButton &itr : this->Buttons)
+                else if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2] && itr.special)
                 {
-                    if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
+                    // Destroy pawn and add score
+                    if (itr.specialtype == SLOW)
                     {
-                        // set isClicked to true to used to process in future
-                        itr.isClicked = GL_TRUE;
-                        ResourceManager::GetWAVSound("SELECT").PlayOnce();
+                        this->SlowMode = GL_TRUE;
+                        std::cout << "Slow mode engage for 5 seconds!" << std::endl;
+                        this->SlowTime = 5;
                     }
-                }
-
-                for (UIButton &itr : this->Buttons)
-                {
-                    if (itr.isClicked)
+                    else if (itr.specialtype == MULTIPLIER)
                     {
-                        itr.isClicked = GL_FALSE;
-                        if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 255.0f)
-                        {
-                            this->CurrentPlayState = PAUSE;
-                        }
-                        break;
+                        this->MultiMode = GL_TRUE;
+                        std::cout << "Multiplier mode engage for 5 seconds!" << std::endl;
+                        this->MultiTime = 5;
                     }
+                    else if (itr.specialtype == DESTROY)
+                    {
+                        this->DestroyMode = GL_TRUE;
+                        std::cout << "Destroy all." << std::endl;
+                    }
+                    itr.isDestroyed = GL_TRUE;
+                    ResourceManager::GetWAVSound("HIT").PlayOnce();
                 }
             }
+
+            // Check what object is cursor over and do something
+            for (UIButton &itr : this->Buttons)
+            {
+                if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
+                {
+                    // set isClicked to true to used to process in future
+                    itr.isClicked = GL_TRUE;
+
+                    ResourceManager::GetWAVSound("SELECT").PlayOnce();
+                }
+            }
+
+            for (UIButton &itr : this->Buttons)
+            {
+                if (itr.isClicked)
+                {
+                    itr.isClicked = GL_FALSE;
+                    if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 255.0f)
+                    {
+                        this->CurrentPlayState = PAUSE;
+                    }
+                    else if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 254.0f)
+                    {
+                        this->CurrentPlayState = PLAY;
+                    }
+                    else if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 253.0f || itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 251.0f)
+                    {
+                        this->RestartPlay();
+                    }
+                    else if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 252.0f || itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 250.0f)
+                    {
+                        this->ResetGame();
+                        this->ChangeLevel(MENU_LV);
+                    }                    
+                    break;
+                }
+            }                
         }
         else if (waitopeningtime <= 0)
         {
@@ -529,14 +559,14 @@ GLvoid Game::ProcessInput()
                     {
                         if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
-                            this->ChangeLevel(PLAY_LV);
                             this->Currentmode = TIME_ATTACK;
+                            this->ChangeLevel(PLAY_LV);                            
                             this->Time = 30.0f;
                         }
                         else if (itr.ColorID.r * 255.0f == 2.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
-                            this->ChangeLevel(PLAY_LV);
                             this->Currentmode = ENDLESS;
+                            this->ChangeLevel(PLAY_LV);                            
                             this->Lives = 15;
                         }
                         else if (itr.ColorID.r * 255.0f == 3.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
@@ -569,24 +599,6 @@ GLvoid Game::ProcessInput()
             }
         }
         this->Keysprocessed[GLFW_KEY_ESCAPE] = GL_TRUE;
-    }
-
-    if (this->Currentlevel == PLAY_LV)
-    {
-        if (this->CurrentPlayState == END)
-        {
-            GLint anykeypress;
-            for (anykeypress = 0; anykeypress < 1024; anykeypress++)
-            {
-                if (this->Keys[anykeypress])
-                {
-                    this->ResetGame();
-                    this->ChangeLevel(MENU_LV);
-                    this->Keysprocessed[anykeypress] = GL_TRUE;
-                    break;
-                }
-            }
-        }
     }
 }
 
@@ -736,19 +748,33 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
 
         for (UIButton &itr : this->Buttons)
         {
-            itr.Draw(*SpriteRenderer);
+            if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 255.0f)
+                itr.Draw(*SpriteRenderer);
         }
 
         this->RectanglePawn[0].Draw(*ShapeRenderer);
 
         if (this->CurrentPlayState == PAUSE)
         {
-            TextRenderer->RenderText("GAME PAUSE!, Press ESC to continue", (this->windowWidth / 2) - 342.0f, (this->windowHeight / 2) - 30.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
+            for (UIButton &itr : this->Buttons)
+            {
+                if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f < 255.0f && itr.ColorID.b * 255.0f > 251.0f)
+                    itr.Draw(*SpriteRenderer);
+            }
+            TextRenderer->RenderText("GAME PAUSE!", (this->windowWidth / 2) - 270.0f, (this->windowHeight / 2) - 120.0f, 0.80f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
         }
 
         if (this->CurrentPlayState == END)
         {
-            TextRenderer->RenderText("GAME OVER... Press any key to start new game.", (this->windowWidth / 2) - 312.0f, (this->windowHeight / 2) - 30.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
+            for (UIButton &itr : this->Buttons)
+            {
+                if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f < 252.0f && itr.ColorID.b * 255.0f > 249.0f)
+                    itr.Draw(*SpriteRenderer);
+            }
+            TextRenderer->RenderText("GAME OVER!", (this->windowWidth / 2) - 214.0f, (this->windowHeight / 2) - 160.0f, 0.80f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
+
+            sprintf(buffertext, "Your score: %-4d", this->Score);
+            TextRenderer->RenderText(buffertext, (this->windowWidth / 2) - 178.0f, (this->windowHeight / 2) - 60.0f, 0.48f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
         }
     }
 }
@@ -969,6 +995,31 @@ GLvoid Game::ChangeLevel(GameLevel level)
         this->Currentlevel = PLAY_LV;
         this->CurrentPlayState = PLAY;
 
+        ResourceManager::LoadTexture("../Images/PLAY_LV/play_timeatk_restart.png", GL_TRUE, "ui_play_timeatk_restart");
+        ResourceManager::LoadTexture("../Images/PLAY_LV/play_timeatk_continue.png", GL_TRUE, "ui_play_timeatk_continue");
+        ResourceManager::LoadTexture("../Images/PLAY_LV/play_endless_restart.png", GL_TRUE, "ui_play_endless_restart");
+        ResourceManager::LoadTexture("../Images/PLAY_LV/play_endless_continue.png", GL_TRUE, "ui_play_endless_continue");
+        ResourceManager::LoadTexture("../Images/PLAY_LV/play_mainmenu.png", GL_TRUE, "ui_play_mainmenu");
+
+        if (this->Currentmode == TIME_ATTACK)
+        {            
+            this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 254.0f / 255.0f), glm::vec2(92, 400), glm::vec2(260, 100), ResourceManager::GetTexture("ui_play_timeatk_continue")));
+            this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 253.0f / 255.0f), glm::vec2(380, 400), glm::vec2(210, 100), ResourceManager::GetTexture("ui_play_timeatk_restart")));
+
+            this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 251.0f / 255.0f), glm::vec2(245, 400), glm::vec2(210, 100), ResourceManager::GetTexture("ui_play_timeatk_restart")));
+        }
+        else
+        {            
+            this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 254.0f / 255.0f), glm::vec2(92, 400), glm::vec2(260, 100), ResourceManager::GetTexture("ui_play_endless_continue")));
+            this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 253.0f / 255.0f), glm::vec2(380, 400), glm::vec2(210, 100), ResourceManager::GetTexture("ui_play_endless_restart")));
+
+            this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 251.0f / 255.0f), glm::vec2(245, 400), glm::vec2(210, 100), ResourceManager::GetTexture("ui_play_endless_restart")));
+        }
+        
+        this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 252.0f / 255.0f), glm::vec2(618, 400), glm::vec2(310, 100), ResourceManager::GetTexture("ui_play_mainmenu")));
+
+        this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 250.0f / 255.0f), glm::vec2(510, 400), glm::vec2(310, 100), ResourceManager::GetTexture("ui_play_mainmenu")));
+
         this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f), glm::vec2(this->windowWidth - 60, 0), glm::vec2(60, 60), ResourceManager::GetTexture("ui_play_btn_pause")));
 
         this->RectanglePawn.push_back(OBJRectangle(glm::vec3(0.0f), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), glm::vec3(0.0f, 0.0f, 0.0f)));
@@ -1079,6 +1130,43 @@ GLvoid Game::RenderLoading()
     SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
     TextRenderer->RenderText("Loading...", (this->windowWidth / 2) - 156.0f, (this->windowHeight / 2) - 36.0f, 0.72f, glm::vec3(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f));
     glfwSwapBuffers(Getwindow());
+}
+
+GLvoid Game::RestartPlay()
+{
+    if (this->Currentmode == TIME_ATTACK)
+    {
+        this->Time = 30.0f;
+        this->Pawn.clear();
+        this->Score = 0;
+        this->Pawn.clear();
+        this->CurrentPlayState = PLAY;
+        this->PlayTimer = 0.0f;
+        this->NextTimeSpawn = 0.0f;
+        this->SlowMode = GL_FALSE;
+        this->SlowTime = 0.0f;
+        this->MultiMode = GL_FALSE;
+        this->MultiTime = 0.0f;
+        this->DestroyMode = GL_FALSE;
+        this->ResetColorID();
+    }
+    else
+    {
+        this->Time = 0.0f;
+        this->Pawn.clear();
+        this->Score = 0;
+        this->Lives = 15;
+        this->Pawn.clear();
+        this->CurrentPlayState = PLAY;
+        this->PlayTimer = 0.0f;
+        this->NextTimeSpawn = 0.0f;
+        this->SlowMode = GL_FALSE;
+        this->SlowTime = 0.0f;
+        this->MultiMode = GL_FALSE;
+        this->MultiTime = 0.0f;
+        this->DestroyMode = GL_FALSE;
+        this->ResetColorID();
+    }
 }
 
 GLvoid de_allocatethemepreview()

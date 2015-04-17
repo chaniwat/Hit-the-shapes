@@ -71,6 +71,8 @@ class Game
         GLvoid ChangeLevel(GameLevel level);
         // Render loading
         GLvoid RenderLoading();
+        // Restart Play
+        GLvoid RestartPlay();
     private:
         const GLfloat TimeSpawnBase = 1.75f;
         GLfloat NextTimeSpawn = 0.0f;
