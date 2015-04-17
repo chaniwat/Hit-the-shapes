@@ -103,6 +103,8 @@ GLvoid Game::init()
     ResourceManager::LoadWAVSound("../Sounds/bgm.wav", "BGM");
     ResourceManager::LoadWAVSound("../Sounds/hit.wav", "HIT");
     ResourceManager::LoadWAVSound("../Sounds/select.wav", "SELECT");
+    // Load Highscore
+    this->LoadHighscore();
 }
 
 GLvoid Game::Update(GLfloat dt)
@@ -265,6 +267,11 @@ GLvoid Game::Update(GLfloat dt)
             else
             {
                 this->RectanglePawn[0].Alpha = 0.85f;
+            }
+
+            if (this->Score > this->Highscore)
+            {
+                this->SaveHighscore();
             }
         }
     }
@@ -531,6 +538,10 @@ GLvoid Game::ProcessInput()
                         {
                             glfwSetWindowShouldClose(Getwindow(), GL_TRUE);
                         }
+                        else if (itr.ColorID.r * 255.0f == 3.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            this->ChangeLevel(SCORE_LV);
+                        }
                     }
                     else if (this->Currentlevel == THEME_LV)
                     {
@@ -576,6 +587,13 @@ GLvoid Game::ProcessInput()
                             this->ChangeLevel(THEME_LV);
                         }
                     }
+                    else if (this->Currentlevel == SCORE_LV)
+                    {
+                        if (itr.ColorID.r * 255.0f == 1.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
+                        {
+                            this->ChangeLevel(MENU_LV);
+                        }
+                    }
                     break;
                 }
             }
@@ -608,7 +626,7 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
     {
         if (this->Currentlevel == MENU_LV)
         {
-            SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
+            SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), 1.0f);
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_3"), glm::vec2((this->windowWidth / 2) - (347.0f / 2.0f), (this->windowHeight / 2) - (346.0f / 2.0f)), glm::vec2(347, 346), circle3_angle, glm::vec3(1.0f, 1.0f, 1.0f));
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_2"), glm::vec2((this->windowWidth / 2) - (415.0f / 2.0f), (this->windowHeight / 2) - (414.0f / 2.0f)), glm::vec2(415, 414), circle2_angle, glm::vec3(1.0f, 1.0f, 1.0f));
             SpriteRenderer->Draw(ResourceManager::GetTexture("ui_circle_1"), glm::vec2((this->windowWidth / 2) - (523.0f / 2.0f), (this->windowHeight / 2) - (522.0f / 2.0f)), glm::vec2(523, 522), circle1_angle, glm::vec3(1.0f, 1.0f, 1.0f));
@@ -720,7 +738,7 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
 
         SpriteRenderer->Draw(ResourceManager::GetTexture("ui_theme_header"), glm::vec2(0, 0), glm::vec2(this->windowWidth, 93), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
     }
-    else
+    else if (this->Currentlevel == PLAY_LV)
     {
         SpriteRenderer->Draw(ResourceManager::GetTexture("theme_background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -775,6 +793,21 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
 
             sprintf(buffertext, "Your score: %-4d", this->Score);
             TextRenderer->RenderText(buffertext, (this->windowWidth / 2) - 178.0f, (this->windowHeight / 2) - 60.0f, 0.48f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
+        }
+    }
+    else
+    {
+        SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+        TextRenderer->RenderText("HIGH SCORE!!!", (this->windowWidth / 2) - 300.0f, 194.0f, 0.90f, glm::vec3(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f));
+
+        static GLchar buffertext[32];
+        sprintf(buffertext, "%04d", this->Highscore);
+        TextRenderer->RenderText(buffertext, (this->windowWidth / 2) - 100.0f, 334.0f, 0.78f, glm::vec3(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f));
+
+        for (UIButton &itr : this->Buttons)
+        {
+            itr.Draw(*SpriteRenderer);
         }
     }
 }
@@ -1025,6 +1058,12 @@ GLvoid Game::ChangeLevel(GameLevel level)
         this->RectanglePawn.push_back(OBJRectangle(glm::vec3(0.0f), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), glm::vec3(0.0f, 0.0f, 0.0f)));
         this->RectanglePawn[0].Alpha = 0.0f;
     }
+    else if (level == SCORE_LV)
+    {
+        this->Currentlevel = SCORE_LV;
+
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2.0) - (310 / 2.0), 460), glm::vec2(310, 100), ResourceManager::GetTexture("ui_play_mainmenu")));
+    }
 }
 
 GLvoid Game::ResetGame()
@@ -1167,6 +1206,41 @@ GLvoid Game::RestartPlay()
         this->DestroyMode = GL_FALSE;
         this->ResetColorID();
     }
+}
+
+GLvoid Game::LoadHighscore()
+{
+    std::string line;
+    std::ifstream myfile("../debug/highscore");
+    if (myfile.is_open())
+    {
+        this->Highscore = atoi(line.c_str());
+        myfile.close();
+    }
+    else
+    {
+        std::ofstream myfile("../debug/highscore");
+        if (myfile.is_open())
+        {
+            myfile << "0";
+            myfile.close();
+        }
+    }
+}
+
+GLvoid Game::SaveHighscore()
+{
+    this->Highscore = this->Score;
+
+    std::ofstream myfile("../debug/highscore");
+    if (myfile.is_open())
+    {
+        GLchar buffer[32];
+        sprintf(buffer, "%d", this->Highscore);
+        myfile << buffer;
+        myfile.close();
+    }
+    else std::cout << "Unable to open file";
 }
 
 GLvoid de_allocatethemepreview()

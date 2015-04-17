@@ -35,6 +35,7 @@ class Game
         GameMode Currentmode;
         PlayState CurrentPlayState;
         GLuint Score;
+        GLuint Highscore;
         GLint Lives;
         GLfloat Time;
         GLboolean SlowMode = GL_FALSE;
@@ -73,6 +74,10 @@ class Game
         GLvoid RenderLoading();
         // Restart Play
         GLvoid RestartPlay();
+        // Load highscore
+        GLvoid LoadHighscore();
+        // Save highscore
+        GLvoid SaveHighscore();
     private:
         const GLfloat TimeSpawnBase = 1.75f;
         GLfloat NextTimeSpawn = 0.0f;
