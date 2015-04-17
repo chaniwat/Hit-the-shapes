@@ -22,7 +22,7 @@
 #include "game_pawn.h"
 #include "obj_rectangle.h"
 
-enum GameLevel { MENU_LV, THEME_LV, MODE_LV, PLAY_LV };
+enum GameLevel { MENU_LV, THEME_LV, MODE_LV, PLAY_LV, SCORE_LV };
 enum GameMode { TIME_ATTACK, ENDLESS };
 enum PlayState { PLAY, PAUSE, END };
 

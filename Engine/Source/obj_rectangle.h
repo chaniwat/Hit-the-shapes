@@ -13,14 +13,14 @@ public:
     // Pawn State
     glm::vec2 Position, Size;
     glm::vec3 Color, ColorID;
-    GLfloat Hue, Rotation;
+    GLfloat Hue, Rotation, Alpha;
     // Texture
     GLboolean isTextured = GL_FALSE;
     Texture2D Sprite;
     // Constructor
     OBJRectangle();
-    OBJRectangle(glm::vec3 colorID, glm::vec2 pos, glm::vec2 size, glm::vec3 color = glm::vec3(1.0f), GLfloat hue = 0.0f);
-    OBJRectangle(glm::vec3 colorID, glm::vec2 pos, glm::vec2 size, Texture2D sprite, glm::vec3 color = glm::vec3(1.0f), GLfloat hue = 0.0f);
+    OBJRectangle(glm::vec3 colorID, glm::vec2 pos, glm::vec2 size, glm::vec3 color = glm::vec3(1.0f), GLfloat alpha = 1.0f, GLfloat hue = 0.0f);
+    OBJRectangle(glm::vec3 colorID, glm::vec2 pos, glm::vec2 size, Texture2D sprite, glm::vec3 color = glm::vec3(1.0f), GLfloat alpha = 1.0f, GLfloat hue = 0.0f);
     // Draw sprite
     virtual GLvoid Draw(SpriteRender &renderer);
     // Draw color ID

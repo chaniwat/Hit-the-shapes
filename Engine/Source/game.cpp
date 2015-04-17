@@ -78,6 +78,7 @@ GLvoid Game::init()
     ResourceManager::LoadTexture("../Images/MODE_LV/Mode_backtotheme.png", GL_TRUE, "ui_Mode_backtotheme");
     ResourceManager::LoadTexture("../Images/MODE_LV/Mode_bg.png", GL_TRUE, "ui_Mode_bg");
     // Play level
+    ResourceManager::LoadTexture("../Images/PLAY_LV/play_btn_pause.png", GL_TRUE, "ui_play_btn_pause");
     ResourceManager::LoadTexture("../Images/frost-frame.png", GL_TRUE, "ui_forst_frame");
     ResourceManager::LoadTexture("../Images/fancy-frame.png", GL_TRUE, "ui_fancy_frame");
     // Configure shaders
@@ -226,6 +227,12 @@ GLvoid Game::Update(GLfloat dt)
         }
         if (this->CurrentPlayState == PLAY)
         {
+            if (this->RectanglePawn[0].Alpha > 0.0f) this->RectanglePawn[0].Alpha -= dt * 6;
+            else
+            {
+                this->RectanglePawn[0].Alpha = 0.0f;
+            }
+
             // Reduce life time & if pawn is special type, shift hue
             for (GamePawn &itr : this->Pawn)
             {
@@ -246,7 +253,15 @@ GLvoid Game::Update(GLfloat dt)
                     itr.isDestroyed = GL_TRUE;
                 }
             }
-        }   
+        } 
+        else if (this->CurrentPlayState == PAUSE || this->CurrentPlayState == END)
+        {
+            if (this->RectanglePawn[0].Alpha < 0.85f) this->RectanglePawn[0].Alpha += dt * 6;
+            else
+            {
+                this->RectanglePawn[0].Alpha = 0.85f;
+            }
+        }
     }
 }
 
@@ -276,6 +291,12 @@ GLvoid Game::ProcessInput()
                 // Render pawn color to color ID
                 itr.DrawColorID(*ColorIDRenderer);
             }
+
+            // Render the color ID
+            for (UIButton &itr : this->Buttons)
+            {
+                itr.DrawColorID(*ColorIDRenderer);
+            }
         }
 
         // Read Color pixel at cursor
@@ -283,17 +304,37 @@ GLvoid Game::ProcessInput()
         glfwGetCursorPos(Getwindow(), &xpos, &ypos);
         glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixel);
 
+        GLboolean flag = GL_FALSE;
+
         // Check if over on any clickable, change cursor to pointer
         for (GamePawn &itr : this->Pawn)
         {
             if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
             {
                 SetWindowCursor(POINTER);
+                flag = GL_TRUE;
                 break;
             }
             else
             {
                 SetWindowCursor(ARROW);
+            }
+        }
+
+        if (!flag)
+        {
+            // Check if over on any clickable, change cursor to pointer
+            for (UIButton &itr : this->Buttons)
+            {
+                if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
+                {
+                    SetWindowCursor(POINTER);
+                    break;
+                }
+                else
+                {
+                    SetWindowCursor(ARROW);
+                }
             }
         }
     }
@@ -400,6 +441,30 @@ GLvoid Game::ProcessInput()
                         }
                         itr.isDestroyed = GL_TRUE;
                         ResourceManager::GetWAVSound("HIT").PlayOnce();
+                    }
+                }
+
+                // Check what object is cursor over and do something
+                for (UIButton &itr : this->Buttons)
+                {
+                    if (itr.ColorID.r * 255.0f == pixel[0] && itr.ColorID.g * 255.0f == pixel[1] && itr.ColorID.b * 255.0f == pixel[2])
+                    {
+                        // set isClicked to true to used to process in future
+                        itr.isClicked = GL_TRUE;
+                        ResourceManager::GetWAVSound("SELECT").PlayOnce();
+                    }
+                }
+
+                for (UIButton &itr : this->Buttons)
+                {
+                    if (itr.isClicked)
+                    {
+                        itr.isClicked = GL_FALSE;
+                        if (itr.ColorID.r * 255.0f == 255.0f && itr.ColorID.g * 255.0f == 255.0f && itr.ColorID.b * 255.0f == 255.0f)
+                        {
+                            this->CurrentPlayState = PAUSE;
+                        }
+                        break;
                     }
                 }
             }
@@ -511,7 +576,7 @@ GLvoid Game::ProcessInput()
         if (this->CurrentPlayState == END)
         {
             GLint anykeypress;
-            for (anykeypress = 10; anykeypress < 1024; anykeypress++)
+            for (anykeypress = 0; anykeypress < 1024; anykeypress++)
             {
                 if (this->Keys[anykeypress])
                 {
@@ -669,6 +734,13 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
             TextRenderer->RenderText(buffertext, 0.0f, 100.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
         }
 
+        for (UIButton &itr : this->Buttons)
+        {
+            itr.Draw(*SpriteRenderer);
+        }
+
+        this->RectanglePawn[0].Draw(*ShapeRenderer);
+
         if (this->CurrentPlayState == PAUSE)
         {
             TextRenderer->RenderText("GAME PAUSE!, Press ESC to continue", (this->windowWidth / 2) - 342.0f, (this->windowHeight / 2) - 30.0f, 0.40f, glm::vec3(140.0f / 255.0f, 140.0f / 255.0f, 140.0f / 255.0f));
@@ -699,24 +771,25 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                 GLfloat factorsize;
                 GLfloat x_pos = std::rand() % (this->windowWidth - 100 + 1);
                 GLfloat y_pos = std::rand() % (this->windowHeight - 100 + 1);
+                GLfloat rotation = std::rand() % 360;
                 GLfloat percentofrarespawn = std::rand() % 10000;
                 if (percentofrarespawn >= 0 && percentofrarespawn <= 6000)
                 {
                     if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100.0;
                     else factorsize = pawnthemesize[0][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1")));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1"), GL_FALSE, NONE, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 else if (percentofrarespawn >= 6001 && percentofrarespawn <= 8500)
                 {
                     if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 100.0;
                     else factorsize = pawnthemesize[1][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.5, 3, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.5, 3, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2"), GL_FALSE, NONE, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9550)
                 {
                     if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 100.0;
                     else factorsize = pawnthemesize[2][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 1.75, 5, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 1.75, 5, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3"), GL_FALSE, NONE, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 else if (percentofrarespawn >= 9551 && percentofrarespawn <= 9999)
                 {
@@ -727,7 +800,7 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     else if (typerand == 3) type = DESTROY;
                     if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100.0;
                     else factorsize = pawnthemesize[3][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 if (this->RSCID_red != 255)
                 {
@@ -760,24 +833,25 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                 GLfloat factorsize;
                 GLfloat x_pos = std::rand() % (this->windowWidth - 100 + 1);
                 GLfloat y_pos = std::rand() % (this->windowHeight - 100 + 1);
+                GLfloat rotation = std::rand() % 360;
                 GLfloat percentofrarespawn = std::rand() % 10000;
                 if (percentofrarespawn >= 0 && percentofrarespawn <= 6000)
                 {
                     if (pawnthemesize[0][0] > pawnthemesize[0][1]) factorsize = pawnthemesize[0][0] / 100.0;
                     else factorsize = pawnthemesize[0][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1")));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[0][0] / factorsize, pawnthemesize[0][1] / factorsize), ResourceManager::GetTexture("theme_pawn1"), GL_FALSE, NONE, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 else if (percentofrarespawn >= 6001 && percentofrarespawn <= 8500)
                 {
                     if (pawnthemesize[1][0] > pawnthemesize[1][1]) factorsize = pawnthemesize[1][0] / 100.0;
                     else factorsize = pawnthemesize[1][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2")));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[1][0] / factorsize, pawnthemesize[1][1] / factorsize), ResourceManager::GetTexture("theme_pawn2"), GL_FALSE, NONE, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 else if (percentofrarespawn >= 8501 && percentofrarespawn <= 9550)
                 {
                     if (pawnthemesize[2][0] > pawnthemesize[2][1]) factorsize = pawnthemesize[2][0] / 100.0;
                     else factorsize = pawnthemesize[2][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3")));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 3, 1, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[2][0] / factorsize, pawnthemesize[2][1] / factorsize), ResourceManager::GetTexture("theme_pawn3"), GL_FALSE, NONE, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 else if (percentofrarespawn >= 9551 && percentofrarespawn <= 9999)
                 {
@@ -788,7 +862,7 @@ GLvoid Game::SpawnPawn(GLfloat dt)
                     else if (typerand == 3) type = DESTROY;
                     if (pawnthemesize[3][0] > pawnthemesize[3][1]) factorsize = pawnthemesize[3][0] / 100.0;
                     else factorsize = pawnthemesize[3][1] / 100.0;
-                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type));
+                    this->Pawn.push_back(GamePawn(glm::vec3(this->RSCID_red / 255.0f, this->RSCID_green / 255.0f, this->RSCID_blue / 255.0f), 2.35, 0, glm::vec2(x_pos, y_pos), glm::vec2(pawnthemesize[3][0] / factorsize, pawnthemesize[3][1] / factorsize), ResourceManager::GetTexture("theme_slow"), GL_TRUE, type, glm::vec3(1.0f), 0.0f, rotation));
                 }
                 if (this->RSCID_red != 255)
                 {
@@ -891,9 +965,14 @@ GLvoid Game::ChangeLevel(GameLevel level)
     else if (level == PLAY_LV)
     {
         themepage = 1;
-
+        
         this->Currentlevel = PLAY_LV;
         this->CurrentPlayState = PLAY;
+
+        this->Buttons.push_back(UIButton(glm::vec3(255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f), glm::vec2(this->windowWidth - 60, 0), glm::vec2(60, 60), ResourceManager::GetTexture("ui_play_btn_pause")));
+
+        this->RectanglePawn.push_back(OBJRectangle(glm::vec3(0.0f), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), glm::vec3(0.0f, 0.0f, 0.0f)));
+        this->RectanglePawn[0].Alpha = 0.0f;
     }
 }
 

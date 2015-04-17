@@ -25,7 +25,7 @@ class GamePawn
         Texture2D Sprite;
         // Constructor
         GamePawn();
-        GamePawn(glm::vec3 colorID, GLfloat aliveTime, GLuint score, glm::vec2 pos, glm::vec2 size, Texture2D sprite, GLboolean isspecial = GL_FALSE, specialpawn type = NONE, glm::vec3 color = glm::vec3(1.0f), GLfloat hue = 0.0f);
+        GamePawn(glm::vec3 colorID, GLfloat aliveTime, GLuint score, glm::vec2 pos, glm::vec2 size, Texture2D sprite, GLboolean isspecial = GL_FALSE, specialpawn type = NONE, glm::vec3 color = glm::vec3(1.0f), GLfloat hue = 0.0f, GLfloat rotation = 0.0f);
         // Draw sprite
         virtual GLvoid Draw(SpriteRender &renderer);
         // Draw color ID
