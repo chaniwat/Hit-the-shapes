@@ -6,8 +6,6 @@
 #include "dirent.h"
 #include "sound.h"
 
-#include <mxml.h>
-
 SpriteRender *SpriteRenderer;
 SpriteRender *ShapeRenderer;
 SpriteRender *ColorIDRenderer;
@@ -1135,27 +1133,7 @@ GLvoid Game::LoadGameTheme(GLchar *PathToGameTheme)
 
     GLchar pathtoslow[256] = "";
     strcpy(pathtoslow, PathToGameTheme);
-    strcat(pathtoslow, "powerup/slow.png");
-
-    // Get XML information
-    FILE *fp;
-    mxml_node_t *tree;
-
-    fp = fopen(pathtoxml, "r");
-    tree = mxmlLoadFile(NULL, fp, MXML_TEXT_CALLBACK);
-    fclose(fp);
-
-    mxml_node_t *classnode;
-
-    //int i = 0;
-
-    for (classnode = mxmlFindElement(tree, tree, "class", NULL, NULL, MXML_DESCEND); classnode != NULL; classnode = mxmlFindElement(classnode, tree, "class", NULL, NULL, MXML_DESCEND))
-    {
-        printf("Class: %s\n", classnode->child->value.text.string);
-        //i++;
-    }
-
-    mxmlDelete(tree);
+    strcat(pathtoslow, "powerup/powerup.png");
 
     // Theme loaded
     ResourceManager::LoadTexture(pathtobackground, GL_FALSE, "theme_background");
