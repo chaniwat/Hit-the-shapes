@@ -35,7 +35,7 @@ class Game
         GameMode Currentmode;
         PlayState CurrentPlayState;
         GLuint Score;
-        GLuint Highscore;
+        GLuint HighscoreTIME, HighscoreEND;;
         GLint Lives;
         GLfloat Time;
         GLboolean SlowMode = GL_FALSE;

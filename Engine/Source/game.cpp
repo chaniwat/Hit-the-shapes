@@ -269,7 +269,11 @@ GLvoid Game::Update(GLfloat dt)
                 this->RectanglePawn[0].Alpha = 0.85f;
             }
 
-            if (this->Score > this->Highscore)
+            if (this->Currentmode == TIME_ATTACK && this->Score > this->HighscoreTIME)
+            {
+                this->SaveHighscore();
+            }
+            else if (this->Currentmode == ENDLESS && this->Score > this->HighscoreEND)
             {
                 this->SaveHighscore();
             }
@@ -799,11 +803,18 @@ GLvoid Game::DrawCurrentLevel(GLfloat dt)
     {
         SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, 0), glm::vec2(this->windowWidth, this->windowHeight), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
-        TextRenderer->RenderText("HIGH SCORE!!!", (this->windowWidth / 2) - 300.0f, 194.0f, 0.90f, glm::vec3(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f));
+        TextRenderer->RenderText("HIGH SCORE!!!", (this->windowWidth / 2) - 300.0f, 150.0f, 0.90f, glm::vec3(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f));
+
+        TextRenderer->RenderText("TIME ATTACK", (this->windowWidth / 2) - 420.0f, 304.0f, 0.60f, glm::vec3(248.0f / 255.0f, 0.0f / 255.0f, 70.0f / 255.0f));
+
+        TextRenderer->RenderText("ENDLESS", (this->windowWidth / 2) + 120.0f, 304.0f, 0.60f, glm::vec3(67.0f / 255.0f, 133.0f / 255.0f, 255.0f / 255.0f));
 
         static GLchar buffertext[32];
-        sprintf(buffertext, "%04d", this->Highscore);
-        TextRenderer->RenderText(buffertext, (this->windowWidth / 2) - 100.0f, 334.0f, 0.78f, glm::vec3(0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f));
+        sprintf(buffertext, "%04d", this->HighscoreTIME);
+        TextRenderer->RenderText(buffertext, (this->windowWidth / 2) - 330.0f, 394.0f, 0.78f, glm::vec3(248.0f / 255.0f, 0.0f / 255.0f, 70.0f / 255.0f));
+
+        sprintf(buffertext, "%04d", this->HighscoreEND);
+        TextRenderer->RenderText(buffertext, (this->windowWidth / 2) + 148.0f, 394.0f, 0.78f, glm::vec3(67.0f / 255.0f, 133.0f / 255.0f, 255.0f / 255.0f));
 
         for (UIButton &itr : this->Buttons)
         {
@@ -1062,7 +1073,7 @@ GLvoid Game::ChangeLevel(GameLevel level)
     {
         this->Currentlevel = SCORE_LV;
 
-        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2.0) - (310 / 2.0), 460), glm::vec2(310, 100), ResourceManager::GetTexture("ui_play_mainmenu")));
+        this->Buttons.push_back(UIButton(glm::vec3(1.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f), glm::vec2((this->windowWidth / 2.0) - (310 / 2.0), 530), glm::vec2(310, 100), ResourceManager::GetTexture("ui_play_mainmenu")));
     }
 }
 
@@ -1214,7 +1225,9 @@ GLvoid Game::LoadHighscore()
     std::ifstream myfile("../debug/highscore");
     if (myfile.is_open())
     {
-        this->Highscore = atoi(line.c_str());
+        int i = 0;
+        while (getline(myfile, line))
+            i == 0 ? this->HighscoreTIME = atoi(line.c_str()) : this->HighscoreEND = atoi(line.c_str());
         myfile.close();
     }
     else
@@ -1222,7 +1235,7 @@ GLvoid Game::LoadHighscore()
         std::ofstream myfile("../debug/highscore");
         if (myfile.is_open())
         {
-            myfile << "0";
+            myfile << "0\n" << "0";
             myfile.close();
         }
     }
@@ -1230,13 +1243,18 @@ GLvoid Game::LoadHighscore()
 
 GLvoid Game::SaveHighscore()
 {
-    this->Highscore = this->Score;
+    if (Currentmode == TIME_ATTACK)
+        this->HighscoreTIME = this->Score;
+    else
+        this->HighscoreEND = this->Score;
 
     std::ofstream myfile("../debug/highscore");
     if (myfile.is_open())
     {
         GLchar buffer[32];
-        sprintf(buffer, "%d", this->Highscore);
+        sprintf(buffer, "%d", this->HighscoreTIME);
+        myfile << buffer << "\n";
+        sprintf(buffer, "%d", this->HighscoreEND);
         myfile << buffer;
         myfile.close();
     }
