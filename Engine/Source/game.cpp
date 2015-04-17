@@ -1227,7 +1227,10 @@ GLvoid Game::LoadHighscore()
     {
         int i = 0;
         while (getline(myfile, line))
+        {
             i == 0 ? this->HighscoreTIME = atoi(line.c_str()) : this->HighscoreEND = atoi(line.c_str());
+            i++;
+        }            
         myfile.close();
     }
     else
