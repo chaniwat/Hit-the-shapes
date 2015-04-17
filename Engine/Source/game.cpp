@@ -331,7 +331,7 @@ GLvoid Game::ProcessInput()
 
         // Read Color pixel at cursor
         glGetIntegerv(GL_VIEWPORT, viewport);
-        glfwGetCursorPos(Getwindow(), &xpos, &ypos);
+        glfwGetCursorPos(GetWindow(), &xpos, &ypos);
         glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixel);
 
         GLboolean flag = GL_FALSE;
@@ -403,7 +403,7 @@ GLvoid Game::ProcessInput()
          
         // Read Color pixel at cursor
         glGetIntegerv(GL_VIEWPORT, viewport);
-        glfwGetCursorPos(Getwindow(), &xpos, &ypos);
+        glfwGetCursorPos(GetWindow(), &xpos, &ypos);
         glReadPixels(xpos, viewport[3] - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, (void*)pixel);
 
         // Check if over on any clickable, change cursor to pointer
@@ -540,7 +540,7 @@ GLvoid Game::ProcessInput()
                         }
                         else if (itr.ColorID.r * 255.0f == 2.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
-                            glfwSetWindowShouldClose(Getwindow(), GL_TRUE);
+                            glfwSetWindowShouldClose(GetWindow(), GL_TRUE);
                         }
                         else if (itr.ColorID.r * 255.0f == 3.0f && itr.ColorID.g * 255.0f == 0.0f && itr.ColorID.b * 255.0f == 0.0f)
                         {
@@ -1179,7 +1179,7 @@ GLvoid Game::RenderLoading()
     this->ResetColorID();
     SpriteRenderer->Draw(ResourceManager::GetTexture("background"), glm::vec2(0, -30), glm::vec2(this->windowWidth, this->windowHeight + 60), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
     TextRenderer->RenderText("Loading...", (this->windowWidth / 2) - 156.0f, (this->windowHeight / 2) - 36.0f, 0.72f, glm::vec3(30.0f / 255.0f, 30.0f / 255.0f, 30.0f / 255.0f));
-    glfwSwapBuffers(Getwindow());
+    glfwSwapBuffers(GetWindow());
 }
 
 GLvoid Game::RestartPlay()

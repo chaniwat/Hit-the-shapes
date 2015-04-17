@@ -1,18 +1,17 @@
 //#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 #include "main.h"
-#include <mxml.h>
 
-#include <conio.h>
-
+// Game declaration
 Game Hittheshapes(1024, 768);
 
-// Window declerations
+// Window declaration
 GLFWwindow* window;
 GLFWcursor* cursor_arrow;
 GLFWcursor* cursor_pointer;
+GLvoid BuildWindow();
 
-// GLFW function declerations
+// GLFW functions decleration
 GLvoid key_callback(GLFWwindow* window, GLint key, GLint scancode, GLint action, GLint mode);
 GLvoid mouse_callback(GLFWwindow* window, GLint button, GLint action, GLint mods);
 
@@ -25,7 +24,7 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    Makewindow();
+    BuildWindow();
     glfwMakeContextCurrent(window);
 
     glewExperimental = GL_TRUE;
@@ -99,12 +98,12 @@ int main(int argc, char **argv)
     return 0;
 }
 
-GLvoid Makewindow()
+GLvoid BuildWindow()
 {
     window = glfwCreateWindow(Hittheshapes.windowWidth, Hittheshapes.windowHeight, "Hit the shapes!", nullptr, nullptr);
 }
 
-GLFWwindow* Getwindow()
+GLFWwindow* GetWindow()
 {
     return window;
 }
@@ -137,7 +136,7 @@ GLvoid mouse_callback(GLFWwindow* window, GLint button, GLint action, GLint mods
     }
 }
 
-GLvoid SetWindowCursor(Cursortype type)
+GLvoid SetWindowCursor(GLFWCursorType type)
 {
     if (type == ARROW) glfwSetCursor(window, cursor_arrow);
     else if (type == POINTER) glfwSetCursor(window, cursor_pointer);

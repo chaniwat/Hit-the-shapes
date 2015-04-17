@@ -1,9 +1,10 @@
 #include "game.h"
 #include "resourcemanager.h"
 
-enum Cursortype { ARROW, POINTER };
+enum GLFWCursorType { ARROW, POINTER };
 
-GLvoid Makewindow();
-GLFWwindow* Getwindow();
+// Window access function
+GLFWwindow* GetWindow();
 
-GLvoid SetWindowCursor(Cursortype type);
+// Set window cursor
+GLvoid SetWindowCursor(GLFWCursorType type);
